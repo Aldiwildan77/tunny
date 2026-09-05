@@ -124,59 +124,50 @@ flowchart LR
 ```topojson
 {
   "type": "Topology",
-  "transform": {
-    "scale": [0.01, 0.01],
-    "translate": [95, -11]
-  },
   "objects": {
-    "tunny": {
+    "routes": {
+      "type": "GeometryCollection",
+      "geometries": [
+        {
+          "type": "LineString",
+          "properties": {
+            "name": "tunny tunnel",
+            "from": "Japan",
+            "to": "Indonesia"
+          },
+          "arcs": [0]
+        }
+      ]
+    },
+    "nodes": {
       "type": "GeometryCollection",
       "geometries": [
         {
           "type": "Point",
           "properties": {
             "name": "Japan",
-            "role": "Requestor",
-            "node": "japan"
+            "role": "Requestor"
           },
-          "coordinates": [4469, 4680]
+          "coordinates": [139.6917, 35.6895]
         },
         {
           "type": "Point",
           "properties": {
             "name": "Indonesia",
-            "role": "Provider",
-            "node": "indonesia"
+            "role": "Provider"
           },
-          "coordinates": [1845, 480]
-        },
-        {
-          "type": "LineString",
-          "properties": {
-            "name": "Tailscale",
-            "protocol": "tsnet"
-          },
-          "arcs": [0]
-        },
-        {
-          "type": "Point",
-          "properties": {
-            "name": "rakuten.co.jp",
-            "role": "Destination"
-          },
-          "coordinates": [4469, 4680]
+          "coordinates": [106.8456, -6.2088]
         }
       ]
     }
   },
   "arcs": [
     [
-      [4469, 4680],
-      [4000, 3800],
-      [3400, 3000],
-      [2800, 2200],
-      [2300, 1400],
-      [1845, 480]
+      [139.6917, 35.6895],
+      [135, 28],
+      [125, 18],
+      [115, 8],
+      [106.8456, -6.2088]
     ]
   ]
 }
