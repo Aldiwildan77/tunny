@@ -4,17 +4,7 @@ Location-aware network tunneling for routing traffic through trusted nodes.
 # How it works
 Basically it's only proxying the request to provider (node - node) by translatin the host using Tailscale network
 
-Client
-  ↓
-tunny proxy
-  ↓
-Dialer / Route
-  ↓
-Tailscale
-  ↓
-tunny provider
-  ↓
-Internet
+See the diagrams below
 
 ```mermaid
 flowchart LR
