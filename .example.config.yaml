@@ -1,0 +1,22 @@
+node:
+  name: japan-node
+
+tailscale:
+  state_dir: ~/.tunny
+  auth_key: ${TS_AUTHKEY}
+
+proxy:
+  listen: 127.0.0.1:1080
+
+provider:
+  listen: :7070
+
+providers:
+  indonesia: indonesia:7070
+  japan: japan:7070
+  singapore: singapore:7070
+
+routes:
+  netflix.com: indonesia
+  aldiwildan.jp: japan
+  app.aldiwildan.sg: singapore
