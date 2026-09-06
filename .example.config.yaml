@@ -11,6 +11,10 @@ proxy:
 provider:
   listen: :7070
 
+tunnel:
+  interface: utun
+  mtu: 1500
+
 providers:
   indonesia: indonesia:7070
   japan: japan:7070

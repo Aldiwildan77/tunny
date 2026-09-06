@@ -18,6 +18,7 @@ type Config struct {
 	// Requestor and Provider
 	Proxy    ProxyConfig    `yaml:"proxy"`
 	Provider ProviderConfig `yaml:"provider"`
+	Tunnel   TunnelConfig   `yaml:"tunnel"`
 
 	// Mapper
 	Providers map[string]string `yaml:"providers" default:"{}"`
@@ -39,6 +40,11 @@ type ProxyConfig struct {
 
 type ProviderConfig struct {
 	Listen string `yaml:"listen" default:":7070"`
+}
+
+type TunnelConfig struct {
+	Interface string `yaml:"interface" default:"utun"`
+	MTU       int    `yaml:"mtu" default:"1500"`
 }
 
 func Load(path string) (*Config, error) {

@@ -9,6 +9,7 @@ import (
 type Table struct {
 	Routes map[string]string
 	IPs    map[string]string
+	Hosts  map[string]string
 
 	mu sync.RWMutex
 }
@@ -17,10 +18,13 @@ func New(routes map[string]string) *Table {
 	table := &Table{
 		Routes: routes,
 		IPs:    make(map[string]string),
+		Hosts:  make(map[string]string),
 	}
 
 	for hostname, provider := range routes {
 		hostname = strings.ToLower(hostname)
+
+		table.Routes[hostname] = provider
 
 		ips, err := net.LookupHost(hostname)
 		if err != nil {
@@ -29,6 +33,7 @@ func New(routes map[string]string) *Table {
 
 		for _, ip := range ips {
 			table.IPs[ip] = provider
+			table.Hosts[ip] = hostname
 		}
 	}
 
@@ -41,8 +46,8 @@ func (t *Table) GetRoute(hostname string) (string, bool) {
 
 	hostname = strings.ToLower(hostname)
 
-	route, ok := t.Routes[hostname]
-	return route, ok
+	provider, ok := t.Routes[hostname]
+	return provider, ok
 }
 
 func (t *Table) AddRoute(hostname, provider string) {
@@ -92,4 +97,41 @@ func (t *Table) Match(host string) (string, bool) {
 	}
 
 	return "", false
+}
+
+func (t *Table) GetIPs() []string {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
+
+	ips := make([]string, 0, len(t.IPs))
+
+	for ip := range t.IPs {
+		ips = append(ips, ip)
+	}
+
+	return ips
+}
+
+func (t *Table) GetNetIPs() []net.IP {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
+
+	ips := make([]net.IP, 0, len(t.IPs))
+
+	for ipStr := range t.IPs {
+		ip := net.ParseIP(ipStr)
+		if ip != nil {
+			ips = append(ips, ip)
+		}
+	}
+
+	return ips
+}
+
+func (t *Table) GetHost(ip string) (string, bool) {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
+
+	host, ok := t.Hosts[ip]
+	return host, ok
 }
