@@ -16,6 +16,7 @@ import (
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv4"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
 	"gvisor.dev/gvisor/pkg/tcpip/transport/tcp"
+	"gvisor.dev/gvisor/pkg/tcpip/transport/udp"
 	"gvisor.dev/gvisor/pkg/waiter"
 )
 
@@ -93,6 +94,7 @@ func (t *Tunnel) setupStack(ctx context.Context) error {
 		},
 		TransportProtocols: []stack.TransportProtocolFactory{
 			tcp.NewProtocol,
+			udp.NewProtocol,
 		},
 	})
 
@@ -132,23 +134,38 @@ func (t *Tunnel) setupStack(ctx context.Context) error {
 
 	log.Println("gVisor default IPv4 route installed")
 
-	forwarder := tcp.NewForwarder(
+	tcpForwarder := tcp.NewForwarder(
 		t.stack,
 		0,
 		64*1024,
 		func(req *tcp.ForwarderRequest) {
 			log.Println("TCP forwarder callback")
-
 			go t.handleTCPForward(ctx, req)
+		},
+	)
+
+	udpForwarder := udp.NewForwarder(
+		t.stack,
+		func(req *udp.ForwarderRequest) bool {
+			log.Println("UDP forwarder callback")
+			go t.handleUDPForward(ctx, req)
+			return true
 		},
 	)
 
 	t.stack.SetTransportProtocolHandler(
 		tcp.ProtocolNumber,
-		forwarder.HandlePacket,
+		tcpForwarder.HandlePacket,
 	)
 
 	log.Println("TCP forwarder registered")
+
+	t.stack.SetTransportProtocolHandler(
+		udp.ProtocolNumber,
+		udpForwarder.HandlePacket,
+	)
+
+	log.Println("UDP forwarder registered")
 
 	return nil
 }
@@ -357,6 +374,116 @@ func (t *Tunnel) handleTCPForward(
 		"TCP forwarding finished: %s",
 		dst,
 	)
+}
+
+func (t *Tunnel) handleUDPForward(
+	ctx context.Context,
+	req *udp.ForwarderRequest,
+) {
+	id := req.ID()
+
+	log.Printf(
+		"UDP request: src=%s:%d dst=%s:%d",
+		id.RemoteAddress,
+		id.RemotePort,
+		id.LocalAddress,
+		id.LocalPort,
+	)
+
+	var wq waiter.Queue
+
+	log.Println("creating gVisor UDP endpoint")
+
+	endpoint, udpErr := req.CreateEndpoint(&wq)
+	if udpErr != nil {
+		log.Printf(
+			"create UDP endpoint failed: %v",
+			udpErr,
+		)
+
+		return
+	}
+	defer endpoint.Close()
+
+	inbound := gonet.NewUDPConn(&wq, endpoint)
+	defer inbound.Close()
+
+	dstIP := id.LocalAddress.String()
+	dst := net.JoinHostPort(
+		id.LocalAddress.String(),
+		fmt.Sprintf("%d", id.LocalPort),
+	)
+
+	domain := dstIP
+	if host, ok := t.routes.GetHost(dstIP); ok {
+		domain = host
+	}
+
+	log.Printf(
+		"dialing outbound: %s",
+		dst,
+	)
+
+	outbound, err := t.dialer.Dial(
+		ctx,
+		"udp",
+		dst,
+	)
+	if err != nil {
+		log.Printf(
+			"outbound dial failed: %s: %v",
+			dst,
+			err,
+		)
+
+		return
+	}
+	defer outbound.Close()
+
+	log.Printf(
+		"UDP request: %s:%d -> %s (%s)",
+		id.RemoteAddress,
+		id.RemotePort,
+		domain,
+		dst,
+	)
+
+	var wg sync.WaitGroup
+
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+
+		n, err := io.Copy(outbound, inbound)
+
+		log.Printf(
+			"client -> provider finished: bytes=%d err=%v",
+			n,
+			err,
+		)
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		n, err := io.Copy(inbound, outbound)
+
+		log.Printf(
+			"provider -> client finished: bytes=%d err=%v",
+			n,
+			err,
+		)
+	}()
+
+	wg.Wait()
+
+	log.Printf(
+		"UDP forwarding finished: %s",
+		dst,
+	)
+
+	<-ctx.Done()
 }
 
 func (t *Tunnel) close() {
