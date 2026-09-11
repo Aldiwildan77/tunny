@@ -2,9 +2,10 @@ package node
 
 import (
 	"context"
+	"fmt"
 	"net"
 
-	"tailscale.com/tsnet"
+	"github.com/Aldiwildan77/tunny/config"
 )
 
 type Node interface {
@@ -14,33 +15,16 @@ type Node interface {
 	Dial(ctx context.Context, network, address string) (net.Conn, error)
 }
 
-type node struct {
-	Server *tsnet.Server
-}
-
-func New(name, stateDir, authKey string) Node {
-	return &node{
-		Server: &tsnet.Server{
-			Hostname: name,
-			Dir:      stateDir,
-			AuthKey:  authKey,
-		},
+func New(cfg config.NodeConfig, tailscaleConfig config.TailscaleConfig) (Node, error) {
+	switch cfg.Transport {
+	case "direct":
+		return NewDirectNode(cfg.Name, tailscaleConfig.StateDir), nil
+	case "tailscale":
+		return NewTailscaleNode(cfg.Name, tailscaleConfig.StateDir, tailscaleConfig.AuthKey), nil
+	default:
+		return nil, fmt.Errorf(
+			"unsupported node transport: %s",
+			cfg.Transport,
+		)
 	}
-}
-
-// Optional, any Dial/Listen will also start the server if it is not already running.
-func (n *node) Start() error {
-	return n.Server.Start()
-}
-
-func (n *node) Close() error {
-	return n.Server.Close()
-}
-
-func (n *node) Listen(network, address string) (net.Listener, error) {
-	return n.Server.Listen(network, address)
-}
-
-func (n *node) Dial(ctx context.Context, network, address string) (net.Conn, error) {
-	return n.Server.Dial(ctx, network, address)
 }

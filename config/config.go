@@ -26,7 +26,8 @@ type Config struct {
 }
 
 type NodeConfig struct {
-	Name string `yaml:"name" validate:"required"`
+	Name      string `yaml:"name" validate:"required"`
+	Transport string `yaml:"transport" default:"tailscale" validate:"oneof=direct tailscale"`
 }
 
 type TailscaleConfig struct {

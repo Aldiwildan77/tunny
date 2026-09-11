@@ -33,11 +33,13 @@ var tunnelCmd = &cobra.Command{
 		)
 		defer stop()
 
-		n := node.New(
-			cfg.Node.Name,
-			cfg.Tailscale.StateDir,
-			cfg.Tailscale.AuthKey,
+		n, err := node.New(
+			cfg.Node,
+			cfg.Tailscale,
 		)
+		if err != nil {
+			return err
+		}
 
 		routes := route.New(cfg.Routes)
 
