@@ -32,6 +32,24 @@ services:
     networks:
       lab:
         ipv4_address: 10.0.0.13
+  
+  gdnsd:
+    build: 
+      context: ./gdnsd
+      dockerfile: Dockerfile
+    container_name: gdnsd
+    ports:
+      - "15353:53/tcp"
+      - "15353:53/udp"
+    privileged: true
+    restart: unless-stopped
+    command: ["gdnsd", "-c", "/etc/gdnsd", "-D", "start"]
+    volumes:
+      - ./gdnsd/gdnsd.conf:/etc/gdnsd/config
+      - ./gdnsd/zones:/etc/gdnsd/zones
+    networks:
+      lab:
+        ipv4_address: 10.0.0.10
 
 networks:
   lab:
