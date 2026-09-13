@@ -33,3 +33,15 @@ todo:
 - add load balancing
 - use maglev hashing algorithm behind tunny
 - test bouncing connection between jp <> id, if it works, then try to buy eu/us vm
+
+## Result Example
+
+Proven:
+- [✓] BGP path selection
+- [✓] BGP withdrawal / failover
+- [✓] ECMP
+- [✓] gdnsd multi-address load balancing
+- [✓] Tunny provider TCP health check
+- [✓] DNS provider failover
+
+![Result](result.png)
