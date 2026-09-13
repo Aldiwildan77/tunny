@@ -15,6 +15,4 @@ $TTL 60
 ns1 IN A 10.0.0.10
 ns2 IN A 10.0.0.11
 
-@ IN A 10.0.0.11
-@ IN A 10.0.0.12
-@ IN A 10.0.0.13
+@   IN DYNA multifo!providers

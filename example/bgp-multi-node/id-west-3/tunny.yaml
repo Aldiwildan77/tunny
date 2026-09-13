@@ -1,0 +1,6 @@
+node:
+  name: id-west-3
+  transport: direct
+
+provider:
+  listen: "10.0.0.13:7070"

@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     libmaxminddb-dev \
     ca-certificates \
     dnsutils \
+    netcat-openbsd \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
