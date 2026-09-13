@@ -1,0 +1,41 @@
+services:
+  id-west-1:
+    image: frr:10.6.2
+    container_name: prv-id-west-1
+    privileged: true
+    volumes:
+      - ./id-west-1/frr.conf:/etc/frr/frr.conf
+      - ./id-west-1/daemons:/etc/frr/daemons
+      - ./id-west-1/vtysh.conf:/etc/frr/vtysh.conf
+    networks:
+      lab:
+        ipv4_address: 10.0.0.11
+  id-west-2:
+    image: frr:10.6.2
+    container_name: prv-id-west-2
+    privileged: true
+    volumes:
+      - ./id-west-2/frr.conf:/etc/frr/frr.conf
+      - ./id-west-2/daemons:/etc/frr/daemons
+      - ./id-west-2/vtysh.conf:/etc/frr/vtysh.conf
+    networks:
+      lab:
+        ipv4_address: 10.0.0.12
+  id-west-3:
+    image: frr:10.6.2
+    container_name: prv-id-west-3
+    privileged: true
+    volumes:
+      - ./id-west-3/frr.conf:/etc/frr/frr.conf
+      - ./id-west-3/daemons:/etc/frr/daemons
+      - ./id-west-3/vtysh.conf:/etc/frr/vtysh.conf
+    networks:
+      lab:
+        ipv4_address: 10.0.0.13
+
+networks:
+  lab:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.0.0.0/24 # make small subnet to avoid conflict with other networks
