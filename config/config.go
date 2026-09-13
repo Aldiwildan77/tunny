@@ -32,7 +32,7 @@ type NodeConfig struct {
 
 type TailscaleConfig struct {
 	StateDir string `yaml:"state_dir" default:"~/.tunny"`
-	AuthKey  string `yaml:"auth_key" validate:"required"`
+	AuthKey  string `yaml:"auth_key"`
 }
 
 type ProxyConfig struct {
