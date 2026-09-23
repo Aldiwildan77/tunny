@@ -42,6 +42,9 @@ var tunnelCmd = &cobra.Command{
 		}
 
 		routes := route.New(cfg.Routes)
+		if err := startControlPlane(ctx, cfg, routes, ModeTunnel.String()); err != nil {
+			return err
+		}
 
 		log.Printf("config routes: %+v", cfg.Routes)
 		log.Printf("route IPs: %+v", routes.GetIPs())

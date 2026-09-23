@@ -15,6 +15,7 @@ type Config struct {
 	Node      NodeConfig      `yaml:"node"`
 	Tailscale TailscaleConfig `yaml:"tailscale"`
 	Limiter   LimiterConfig   `yaml:"limiter"`
+	Control   ControlConfig   `yaml:"control_plane"`
 
 	// Requestor and Provider
 	Proxy    ProxyConfig    `yaml:"proxy"`
@@ -52,6 +53,12 @@ type TunnelConfig struct {
 type LimiterConfig struct {
 	Enabled bool `yaml:"enabled" default:"true"`
 	Limit   int  `yaml:"limit" default:"10"`
+}
+
+type ControlConfig struct {
+	Enabled    bool   `yaml:"enabled" default:"false"`
+	Listen     string `yaml:"listen" default:"127.0.0.1:7071"`
+	HTTPListen string `yaml:"http_listen" default:"127.0.0.1:7072"`
 }
 
 func Load(path string) (*Config, error) {

@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package tunny.control.v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "github.com/Aldiwildan77/tunny/control-plane/gen/tunnycontrol;tunnycontrol";
+
+service ControlPlane {
+  rpc GetStatus(GetStatusRequest) returns (Status) {
+    option (google.api.http) = {
+      get: "/v1/status"
+    };
+  }
+  rpc ListRoutes(ListRoutesRequest) returns (RouteList) {
+    option (google.api.http) = {
+      get: "/v1/routes"
+    };
+  }
+  rpc SetRoute(SetRouteRequest) returns (Route) {
+    option (google.api.http) = {
+      post: "/v1/routes"
+      body: "*"
+    };
+  }
+  rpc DeleteRoute(DeleteRouteRequest) returns (DeleteRouteResponse) {
+    option (google.api.http) = {
+      delete: "/v1/routes/{hostname}"
+    };
+  }
+}
+
+message GetStatusRequest {}
+
+message Status {
+  string mode = 1 [json_name = "mode"];
+  string node_name = 2 [json_name = "node_name"];
+  string transport = 3 [json_name = "transport"];
+  int64 uptime_seconds = 4 [json_name = "uptime_seconds"];
+  int64 active_connections = 5 [json_name = "active_connections"];
+}
+
+message ListRoutesRequest {}
+
+message Route {
+  string hostname = 1 [json_name = "hostname"];
+  string provider = 2 [json_name = "provider"];
+}
+
+message RouteList {
+  repeated Route routes = 1;
+}
+
+message SetRouteRequest {
+  string hostname = 1 [json_name = "hostname"];
+  string provider = 2 [json_name = "provider"];
+}
+
+message DeleteRouteRequest {
+  string hostname = 1 [json_name = "hostname"];
+}
+
+message DeleteRouteResponse {}

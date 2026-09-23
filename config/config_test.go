@@ -61,6 +61,8 @@ routes:
 			want: &Config{
 				Node:      NodeConfig{Name: "japan-node", Transport: "direct"},
 				Tailscale: TailscaleConfig{StateDir: "/var/lib/tunny", AuthKey: "tskey-abc"},
+				Limiter:   LimiterConfig{Enabled: true, Limit: 10},
+				Control:   ControlConfig{Enabled: false, Listen: "127.0.0.1:7071", HTTPListen: "127.0.0.1:7072"},
 				Proxy:     ProxyConfig{Listen: "0.0.0.0:1080"},
 				Provider:  ProviderConfig{Listen: ":8080"},
 				Tunnel:    TunnelConfig{Interface: "tun0", MTU: 1400},
@@ -77,6 +79,8 @@ node:
 			want: &Config{
 				Node:      NodeConfig{Name: "minimal", Transport: "tailscale"},
 				Tailscale: TailscaleConfig{StateDir: filepath.Join(homeDir, ".tunny")},
+				Limiter:   LimiterConfig{Enabled: true, Limit: 10},
+				Control:   ControlConfig{Enabled: false, Listen: "127.0.0.1:7071", HTTPListen: "127.0.0.1:7072"},
 				Proxy:     ProxyConfig{Listen: "127.0.0.1:1080"},
 				Provider:  ProviderConfig{Listen: ":7070"},
 				Tunnel:    TunnelConfig{Interface: "utun", MTU: 1500},
@@ -95,6 +99,8 @@ tailscale:
 			want: &Config{
 				Node:      NodeConfig{Name: "tilde", Transport: "tailscale"},
 				Tailscale: TailscaleConfig{StateDir: filepath.Join(homeDir, ".tunny")},
+				Limiter:   LimiterConfig{Enabled: true, Limit: 10},
+				Control:   ControlConfig{Enabled: false, Listen: "127.0.0.1:7071", HTTPListen: "127.0.0.1:7072"},
 				Proxy:     ProxyConfig{Listen: "127.0.0.1:1080"},
 				Provider:  ProviderConfig{Listen: ":7070"},
 				Tunnel:    TunnelConfig{Interface: "utun", MTU: 1500},
@@ -117,6 +123,8 @@ tailscale:
 			want: &Config{
 				Node:      NodeConfig{Name: "env-node", Transport: "tailscale"},
 				Tailscale: TailscaleConfig{StateDir: filepath.Join(homeDir, ".tunny"), AuthKey: "tskey-from-env"},
+				Limiter:   LimiterConfig{Enabled: true, Limit: 10},
+				Control:   ControlConfig{Enabled: false, Listen: "127.0.0.1:7071", HTTPListen: "127.0.0.1:7072"},
 				Proxy:     ProxyConfig{Listen: "127.0.0.1:1080"},
 				Provider:  ProviderConfig{Listen: ":7070"},
 				Tunnel:    TunnelConfig{Interface: "utun", MTU: 1500},

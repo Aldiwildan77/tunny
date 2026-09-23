@@ -34,31 +34,91 @@ See the [proxy and provider example](example/proxy-provider/README.md).
 
 ## Control plane and data plane
 
-### Control plane (WIP)
+### Control plane
 
-The control plane decides how traffic should be handled. In Tunny, this is
-the configuration that defines:
+The control plane manages Tunny while it is running. It decides where traffic
+should go and exposes the settings through gRPC and an HTTP JSON gateway.
+
+It manages:
 
 - Node names and network transport.
 - Provider addresses.
 - Hostname to provider routes.
 - Tunnel, proxy, and provider listening settings.
 
-The route table uses this information to choose a provider before a
-connection is opened.
+The control plane API is defined in
+[`control-plane/control.proto`](control-plane/control.proto).
+
+The main operations are:
+
+- `GetStatus` checks the running mode and uptime.
+- `ListRoutes` lists configured routes.
+- `SetRoute` adds or updates a route.
+- `DeleteRoute` removes a route.
+
+The gRPC server and JSON gateway are disabled by default. Enable them with:
+
+```yaml
+control_plane:
+  enabled: true
+  listen: 127.0.0.1:7071
+  http_listen: 127.0.0.1:7072
+```
 
 ### Data plane
 
-The data plane carries the actual traffic. It starts after a route has been
-selected:
+The data plane carries the actual network traffic after the control plane has
+selected a route:
 
 - The tunnel reads packets from the TUN interface.
-- The proxy or tunnel opens a connection to the selected provider.
+- The tunnel or proxy opens a connection to the selected provider.
 - The provider connects to the destination service.
 - Request and response data are copied between the client and destination.
 
-The control plane chooses the path. The data plane moves the bytes along that
-path.
+In simple terms, the control plane chooses the path and the data plane moves
+the bytes.
+
+### Using the control plane
+
+Start Tunny with the control plane enabled:
+
+```bash
+./tunny proxy -c config.yaml
+```
+
+The gRPC server listens on `127.0.0.1:7071`. The JSON gateway listens on
+`127.0.0.1:7072`.
+
+Use the JSON gateway with `curl`:
+
+```bash
+curl http://127.0.0.1:7072/v1/status
+curl http://127.0.0.1:7072/v1/routes
+curl -X POST http://127.0.0.1:7072/v1/routes \
+  -H 'Content-Type: application/json' \
+  -d '{"hostname":"example.com","provider":"japan"}'
+curl -X DELETE http://127.0.0.1:7072/v1/routes/example.com
+```
+
+You can also use gRPC directly with `grpcurl`. The extra import path is
+needed because the proto uses Google HTTP annotations:
+
+```bash
+GOOGLEAPIS="$(go env GOPATH)/pkg/mod/github.com/grpc-ecosystem/grpc-gateway@v1.16.0/third_party/googleapis"
+
+grpcurl \
+  -plaintext \
+  -import-path . \
+  -import-path "$GOOGLEAPIS" \
+  -proto control-plane/control.proto \
+  127.0.0.1:7071 \
+  tunny.control.v1.ControlPlane/ListRoutes
+```
+
+For most use cases, the JSON gateway and `curl` are simpler.
+
+The control plane manages settings. The tunnel, proxy, and provider continue
+to carry the actual network traffic.
 
 See the diagrams below
 

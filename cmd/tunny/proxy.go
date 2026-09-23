@@ -39,6 +39,9 @@ var proxyCmd = &cobra.Command{
 		}
 
 		routes := route.New(cfg.Routes)
+		if err := startControlPlane(ctx, cfg, routes, ModeProxy.String()); err != nil {
+			return err
+		}
 
 		p := proxy.New(
 			cfg.Proxy.Listen,

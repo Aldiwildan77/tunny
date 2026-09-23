@@ -17,14 +17,11 @@ type Node interface {
 
 func New(cfg config.NodeConfig, tailscaleConfig config.TailscaleConfig) (Node, error) {
 	switch cfg.Transport {
-	case "direct":
+	case DirectNodeType.String():
 		return NewDirectNode(cfg.Name, tailscaleConfig.StateDir), nil
-	case "tailscale":
+	case TailscaleNodeType.String():
 		return NewTailscaleNode(cfg.Name, tailscaleConfig.StateDir, tailscaleConfig.AuthKey), nil
 	default:
-		return nil, fmt.Errorf(
-			"unsupported node transport: %s",
-			cfg.Transport,
-		)
+		return nil, fmt.Errorf("unsupported node transport: %s", cfg.Transport)
 	}
 }

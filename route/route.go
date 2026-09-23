@@ -1,6 +1,7 @@
 package route
 
 import (
+	"maps"
 	"net"
 	"strings"
 	"sync"
@@ -15,6 +16,10 @@ type Table struct {
 }
 
 func New(routes map[string]string) *Table {
+	if routes == nil {
+		routes = make(map[string]string)
+	}
+
 	table := &Table{
 		Routes: routes,
 		IPs:    make(map[string]string),
@@ -134,4 +139,14 @@ func (t *Table) GetHost(ip string) (string, bool) {
 
 	host, ok := t.Hosts[ip]
 	return host, ok
+}
+
+func (t *Table) Snapshot() map[string]string {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
+
+	routes := make(map[string]string, len(t.Routes))
+	maps.Copy(routes, t.Routes)
+
+	return routes
 }

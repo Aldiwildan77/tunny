@@ -11,6 +11,7 @@ import (
 	"github.com/Aldiwildan77/tunny/config"
 	"github.com/Aldiwildan77/tunny/node"
 	"github.com/Aldiwildan77/tunny/provider"
+	"github.com/Aldiwildan77/tunny/route"
 )
 
 var providerCmd = &cobra.Command{
@@ -34,6 +35,11 @@ var providerCmd = &cobra.Command{
 			cfg.Tailscale,
 		)
 		if err != nil {
+			return err
+		}
+
+		routes := route.New(cfg.Routes)
+		if err := startControlPlane(ctx, cfg, routes, ModeProvider.String()); err != nil {
 			return err
 		}
 
