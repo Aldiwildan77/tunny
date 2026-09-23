@@ -1,38 +1,50 @@
 services:
   id-west-1:
     build:
-      context: ./id-west-1
+      context: ../..
+      dockerfile: example/bgp-multi-node/id-west-1/Dockerfile.local
     container_name: prv-id-west-1
     privileged: true
     volumes:
       - ./id-west-1/frr.conf:/etc/frr/frr.conf
       - ./id-west-1/daemons:/etc/frr/daemons
       - ./id-west-1/vtysh.conf:/etc/frr/vtysh.conf
+    ports:
+      - "17071:7070"
     networks:
+      egress:
       lab:
         ipv4_address: 10.0.0.11
   id-west-2:
     build:
-      context: ./id-west-2
+      context: ../..
+      dockerfile: example/bgp-multi-node/id-west-2/Dockerfile.local
     container_name: prv-id-west-2
     privileged: true
     volumes:
       - ./id-west-2/frr.conf:/etc/frr/frr.conf
       - ./id-west-2/daemons:/etc/frr/daemons
       - ./id-west-2/vtysh.conf:/etc/frr/vtysh.conf
+    ports:
+      - "17072:7070"
     networks:
+      egress:
       lab:
         ipv4_address: 10.0.0.12
   id-west-3:
     build:
-      context: ./id-west-3
+      context: ../..
+      dockerfile: example/bgp-multi-node/id-west-3/Dockerfile.local
     container_name: prv-id-west-3
     privileged: true
     volumes:
       - ./id-west-3/frr.conf:/etc/frr/frr.conf
       - ./id-west-3/daemons:/etc/frr/daemons
       - ./id-west-3/vtysh.conf:/etc/frr/vtysh.conf
+    ports:
+      - "17073:7070"
     networks:
+      egress:
       lab:
         ipv4_address: 10.0.0.13
   
@@ -50,6 +62,10 @@ services:
     volumes:
       - ./gdnsd/gdnsd.conf:/etc/gdnsd/config
       - ./gdnsd/zones:/etc/gdnsd/zones
+    depends_on:
+      - id-west-1
+      - id-west-2
+      - id-west-3
     networks:
       lab:
         ipv4_address: 10.0.0.10
@@ -60,3 +76,5 @@ networks:
     ipam:
       config:
         - subnet: 10.0.0.0/24 # make small subnet to avoid conflict with other networks
+  egress:
+    driver: bridge

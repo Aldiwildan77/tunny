@@ -1,0 +1,12 @@
+node:
+  name: mac-client
+  transport: direct
+
+providers:
+  id1: "127.0.0.1:17071"
+  id2: "127.0.0.1:17072"
+  id3: "127.0.0.1:17073"
+
+routes:
+  "ifconfig.me": id1
+  "www.aldiwildan.me": id1

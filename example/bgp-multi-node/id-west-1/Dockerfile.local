@@ -1,0 +1,29 @@
+FROM golang:1.27-alpine AS tunny
+
+WORKDIR /src
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -o /tunny ./cmd/tunny
+
+FROM frr:10.6.2
+
+ARG NODE_ID=1
+
+COPY --from=tunny /tunny /usr/local/bin/tunny
+
+COPY example/bgp-multi-node/id-west-${NODE_ID}/entrypoint.sh /entrypoint.sh
+COPY example/bgp-multi-node/id-west-${NODE_ID}/frr.conf /etc/frr/frr.conf
+COPY example/bgp-multi-node/id-west-${NODE_ID}/daemons /etc/frr/daemons
+COPY example/bgp-multi-node/id-west-${NODE_ID}/vtysh.conf /etc/frr/vtysh.conf
+COPY example/bgp-multi-node/id-west-${NODE_ID}/tunny.yaml /etc/tunny/config.yaml
+
+RUN chmod +x \
+    /entrypoint.sh \
+    /usr/local/bin/tunny
+
+ENTRYPOINT ["/entrypoint.sh"]

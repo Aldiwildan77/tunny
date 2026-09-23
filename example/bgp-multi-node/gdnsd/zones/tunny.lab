@@ -2,7 +2,7 @@ $ORIGIN tunny.lab.
 $TTL 60
 
 @ IN SOA ns1.tunny.lab. admin.tunny.lab (
-    2026091302 ; Serial, increase while change the config
+    2026091303 ; Serial, increase while change the config
     60 ; Refresh
     60 ; Retry
     60 ; Expire
@@ -15,4 +15,4 @@ $TTL 60
 ns1 IN A 10.0.0.10
 ns2 IN A 10.0.0.11
 
-@   IN DYNA multifo!providers
+@   IN DYNA multifo!tunny_pool

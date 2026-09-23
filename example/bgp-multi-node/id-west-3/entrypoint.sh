@@ -8,6 +8,9 @@ echo "================================="
 echo "[node] IP addresses:"
 ip -brief addr
 
+echo "[node] Routes:"
+ip route
+
 echo "[node] Starting FRR..."
 
 # Start FRR daemons

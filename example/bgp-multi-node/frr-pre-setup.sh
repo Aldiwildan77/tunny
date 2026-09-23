@@ -17,7 +17,7 @@ echo "==> Building frr:${VERSION#frr-}..."
 
 cd "${DIR}"
 
-docker build -t "frr:${VERSION#frr-}" .
+docker build -f docker/alpine/Dockerfile -t "frr:${VERSION#frr-}" .
 
 echo "==> Done"
 echo "    Image: frr:${VERSION#frr-}"
