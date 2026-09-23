@@ -133,8 +133,8 @@ flowchart LR
         Proxy --> Dialer
     end
 
-    subgraph Tailscale["Tailscale Tailnet"]
-        TS["Encrypted connection"]
+    subgraph TransportNetwork["Transport Network"]
+      TS["Direct or encrypted connection"]
     end
 
     subgraph Provider["Provider Node"]
@@ -145,7 +145,7 @@ flowchart LR
     end
 
     Dialer -->|"Route matched<br/>CONNECT target"| TS
-    TS -->|"tsnet"| ProviderServer
+    TS -->|"Provider connection"| ProviderServer
 ```
 
 # Flowchart
@@ -167,7 +167,7 @@ flowchart LR
     Route -->|"Yes<br/>domain → provider"| Provider
     Provider -->|"net.Dial()"| Internet
 
-    Proxy -. "tsnet" .-> Provider
+    Proxy -. "Transport network" .-> Provider
 ```
 
 # Sequence Diagram
@@ -175,56 +175,88 @@ flowchart LR
 sequenceDiagram
     participant C as Client
     participant R as 🇯🇵 Requestor
-    participant T as Tailscale
-    participant P as 🇮🇩 Provider
+    participant T as Transport Network
+    participant P1 as 🇮🇩 Provider 1
+    participant P2 as 🇯🇵 Provider 2
+    participant P3 as 🇸🇬 Provider 3
+    participant P4 as 🇺🇸 Provider 4
     participant I as Internet
 
     C->>R: SOCKS5 CONNECT domain:443
     R->>R: Match route
-    R->>T: Dial indonesia:7070
-    T->>P: tsnet connection
-    R->>P: CONNECT domain:443
-    P->>I: net.Dial(domain:443)
-    I-->>P: Response
-    P-->>R: Response
+    alt Route to Provider 1
+        R->>T: Dial provider 1
+        T->>P1: Encrypted connection
+        R->>P1: CONNECT domain:443
+        P1->>I: Connect to destination
+        I-->>P1: Response
+        P1-->>R: Response
+    else Route to Provider 2
+        R->>T: Dial provider 2
+        T->>P2: Encrypted connection
+        R->>P2: CONNECT domain:443
+        P2->>I: Connect to destination
+        I-->>P2: Response
+        P2-->>R: Response
+    else Route to Provider 3
+        R->>T: Dial provider 3
+        T->>P3: Encrypted connection
+        R->>P3: CONNECT domain:443
+        P3->>I: Connect to destination
+        I-->>P3: Response
+        P3-->>R: Response
+    else Route to Provider 4
+        R->>T: Dial provider 4
+        T->>P4: Encrypted connection
+        R->>P4: CONNECT domain:443
+        P4->>I: Connect to destination
+        I-->>P4: Response
+        P4-->>R: Response
+    end
     R-->>C: Response
 ```
 
 # Network Topology
 ```mermaid
 flowchart LR
-    subgraph JP["🇯🇵 JAPAN"]
-        B["🌐 Browser"]
-        R["tunny proxy<br/>SOCKS5"]
-        D["Route Matcher"]
+  subgraph Clients["Requestor Nodes"]
+    C1["🇯🇵 Client 1<br/>Laptop"]
+    C2["🇸🇬 Client 2<br/>Smart TV"]
+    C3["🇺🇸 Client 3<br/>Router"]
 
-        B -->|"SOCKS5"| R
-        R --> D
+    T1["Tunny"]
+    T2["Tunny"]
+    T3["Tunny"]
+
+    C1 --> T1
+    C2 --> T2
+    C3 --> T3
     end
 
-    subgraph TS["☁️ TAILSCALE TAILNET"]
-        T["🔐 tsnet<br/>Encrypted tunnel"]
+    subgraph TS["☁️ TRANSPORT NETWORK"]
+      T["🔐 Direct or encrypted connection"]
     end
 
-    subgraph ID["🇮🇩 INDONESIA"]
-        P["tunny provider<br/>TCP Forwarder"]
-        I["🌍 Internet"]
-
-        P -->|"net.Dial()"| I
+    subgraph Providers["Provider Nodes"]
+        P1["🇮🇩 Provider 1"]
+        P2["🇯🇵 Provider 2"]
+        P3["🇸🇬 Provider 3"]
+        P4["🇺🇸 Provider 4"]
     end
 
-    D -->|"rakuten.co.jp → indonesia"| T
-    T -->|"TCP"| P
+    I["🌍 Internet"]
 
-    classDef requestor fill:#e8f1ff,stroke:#3b82f6,stroke-width:2px
-    classDef provider fill:#eaf8ef,stroke:#22c55e,stroke-width:2px
-    classDef tunnel fill:#f5edff,stroke:#a855f7,stroke-width:2px
-    classDef internet fill:#f5f5f5,stroke:#737373,stroke-width:2px
-
-    class B,R,D requestor
-    class P provider
-    class T tunnel
-    class I internet
+    T1 -->|"Route match"| T
+    T2 -->|"Route match"| T
+    T3 -->|"Route match"| T
+    T -->|"Provider 1"| P1
+    T -->|"Provider 2"| P2
+    T -->|"Provider 3"| P3
+    T -->|"Provider 4"| P4
+    P1 -->|"net.Dial()"| I
+    P2 -->|"net.Dial()"| I
+    P3 -->|"net.Dial()"| I
+    P4 -->|"net.Dial()"| I
 ```
 
 ```topojson
