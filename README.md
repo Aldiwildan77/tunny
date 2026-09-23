@@ -32,6 +32,34 @@ need a system-wide TUN interface.
 
 See the [proxy and provider example](example/proxy-provider/README.md).
 
+## Control plane and data plane
+
+### Control plane (WIP)
+
+The control plane decides how traffic should be handled. In Tunny, this is
+the configuration that defines:
+
+- Node names and network transport.
+- Provider addresses.
+- Hostname to provider routes.
+- Tunnel, proxy, and provider listening settings.
+
+The route table uses this information to choose a provider before a
+connection is opened.
+
+### Data plane
+
+The data plane carries the actual traffic. It starts after a route has been
+selected:
+
+- The tunnel reads packets from the TUN interface.
+- The proxy or tunnel opens a connection to the selected provider.
+- The provider connects to the destination service.
+- Request and response data are copied between the client and destination.
+
+The control plane chooses the path. The data plane moves the bytes along that
+path.
+
 See the diagrams below
 
 ```mermaid
