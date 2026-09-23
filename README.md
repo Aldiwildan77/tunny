@@ -218,3 +218,33 @@ flowchart LR
   ]
 }
 ```
+
+## Download and install
+
+The easiest way to get Tunny is to download a release for your operating
+system from the [GitHub Releases page](https://github.com/Aldiwildan77/tunny/releases).
+
+After downloading a binary, rename it to `tunny`, make it executable on Unix
+systems, and place it somewhere in your `PATH`:
+
+```bash
+chmod +x tunny
+sudo mv tunny /usr/local/bin/tunny
+```
+
+You can also install the latest version with Go:
+
+```bash
+go install github.com/Aldiwildan77/tunny/cmd/tunny@latest
+```
+
+Or build it from the source code:
+
+```bash
+git clone https://github.com/Aldiwildan77/tunny.git
+cd tunny
+make build
+```
+
+The binary is created as `./tunny`. Run `tunny --help` to see the available
+commands. Creating a TUN interface may require administrator privileges.
