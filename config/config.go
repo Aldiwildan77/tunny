@@ -14,6 +14,7 @@ import (
 type Config struct {
 	Node      NodeConfig      `yaml:"node"`
 	Tailscale TailscaleConfig `yaml:"tailscale"`
+	Limiter   LimiterConfig   `yaml:"limiter"`
 
 	// Requestor and Provider
 	Proxy    ProxyConfig    `yaml:"proxy"`
@@ -46,6 +47,11 @@ type ProviderConfig struct {
 type TunnelConfig struct {
 	Interface string `yaml:"interface" default:"utun"`
 	MTU       int    `yaml:"mtu" default:"1500"`
+}
+
+type LimiterConfig struct {
+	Enabled bool `yaml:"enabled" default:"true"`
+	Limit   int  `yaml:"limit" default:"10"`
 }
 
 func Load(path string) (*Config, error) {

@@ -99,7 +99,7 @@ func (t *Tunnel) setupStack(ctx context.Context) error {
 	})
 
 	if err := t.stack.CreateNIC(1, t.endpoint); err != nil {
-		return fmt.Errorf("create NIC: %w", err)
+		return fmt.Errorf("create NIC: %v", err)
 	}
 
 	log.Println("gVisor NIC created")
@@ -107,11 +107,11 @@ func (t *Tunnel) setupStack(ctx context.Context) error {
 	// Accept packets regardless of whether the destination address
 	// belongs to the userspace NIC.
 	if err := t.stack.SetPromiscuousMode(1, true); err != nil {
-		return fmt.Errorf("enable promiscuous mode: %w", err)
+		return fmt.Errorf("enable promiscuous mode: %v", err)
 	}
 
 	if err := t.stack.SetSpoofing(1, true); err != nil {
-		return fmt.Errorf("enable spoofing: %w", err)
+		return fmt.Errorf("enable spoofing: %v", err)
 	}
 
 	log.Println("gVisor promiscuous mode enabled")
@@ -140,7 +140,19 @@ func (t *Tunnel) setupStack(ctx context.Context) error {
 		64*1024,
 		func(req *tcp.ForwarderRequest) {
 			log.Println("TCP forwarder callback")
-			go t.handleTCPForward(ctx, req)
+			id := req.ID()
+
+			var wq waiter.Queue
+
+			endpoint, tcpErr := req.CreateEndpoint(&wq)
+			if tcpErr != nil {
+				log.Printf("create TCP endpoint failed: %v", tcpErr)
+				req.Complete(true)
+				return
+			}
+
+			req.Complete(false)
+			go t.handleTCPForward(ctx, id, &wq, endpoint)
 		},
 	)
 
@@ -268,10 +280,10 @@ func (t *Tunnel) writeDevice(ctx context.Context) error {
 
 func (t *Tunnel) handleTCPForward(
 	ctx context.Context,
-	req *tcp.ForwarderRequest,
+	id stack.TransportEndpointID,
+	wq *waiter.Queue,
+	endpoint tcpip.Endpoint,
 ) {
-	id := req.ID()
-
 	log.Printf(
 		"TCP request: src=%s:%d dst=%s:%d",
 		id.RemoteAddress,
@@ -280,24 +292,9 @@ func (t *Tunnel) handleTCPForward(
 		id.LocalPort,
 	)
 
-	defer req.Complete(true)
-
-	var wq waiter.Queue
-
-	log.Println("creating gVisor TCP endpoint")
-
-	endpoint, tcpErr := req.CreateEndpoint(&wq)
-	if tcpErr != nil {
-		log.Printf(
-			"create TCP endpoint failed: %v",
-			tcpErr,
-		)
-
-		return
-	}
 	defer endpoint.Close()
 
-	inbound := gonet.NewTCPConn(&wq, endpoint)
+	inbound := gonet.NewTCPConn(wq, endpoint)
 	defer inbound.Close()
 
 	dstIP := id.LocalAddress.String()
@@ -341,6 +338,17 @@ func (t *Tunnel) handleTCPForward(
 	)
 
 	var wg sync.WaitGroup
+	var closeOnce sync.Once
+	flowDone := make(chan struct{})
+	closeFlow := func() {
+		closeOnce.Do(func() {
+			_ = inbound.Close()
+			_ = outbound.Close()
+			_ = endpoint.Shutdown(tcpip.ShutdownRead | tcpip.ShutdownWrite)
+			close(flowDone)
+			log.Printf("TCP flow closed: %s", dst)
+		})
+	}
 
 	wg.Add(2)
 
@@ -348,6 +356,7 @@ func (t *Tunnel) handleTCPForward(
 		defer wg.Done()
 
 		n, err := io.Copy(outbound, inbound)
+		closeFlow()
 
 		log.Printf(
 			"client -> provider finished: bytes=%d err=%v",
@@ -360,6 +369,7 @@ func (t *Tunnel) handleTCPForward(
 		defer wg.Done()
 
 		n, err := io.Copy(inbound, outbound)
+		closeFlow()
 
 		log.Printf(
 			"provider -> client finished: bytes=%d err=%v",
@@ -368,7 +378,16 @@ func (t *Tunnel) handleTCPForward(
 		)
 	}()
 
+	go func() {
+		select {
+		case <-ctx.Done():
+			closeFlow()
+		case <-flowDone:
+		}
+	}()
+
 	wg.Wait()
+	closeFlow()
 
 	log.Printf(
 		"TCP forwarding finished: %s",
