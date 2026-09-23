@@ -4,6 +4,34 @@ Location-aware network tunneling for routing traffic through trusted nodes.
 # How it works
 Basically it's only proxying the request to provider (node - node) by translatin the host using Tailscale or Direct network
 
+- The client sends traffic to the tunny tunnel or SOCKS5 proxy.
+- Tunny checks whether the destination matches a configured route.
+- Unmatched traffic uses the normal internet connection.
+- Matched traffic is sent to the selected provider node.
+- The provider connects to the destination and forwards the response back.
+- Providers can connect through Tailscale or a direct network connection.
+
+## Components
+
+### Tunnel
+
+The tunnel creates a local TUN interface. It catches traffic for configured
+routes and forwards it to the selected provider.
+
+See the [tunnel and provider example](example/tunnel-provider/README.md).
+
+### Provider
+
+The provider listens for connections from a tunnel or proxy. It connects to
+the requested destination and sends data between the client and the internet.
+
+### Proxy
+
+The proxy is a local SOCKS5 server. Applications can use it when they do not
+need a system-wide TUN interface.
+
+See the [proxy and provider example](example/proxy-provider/README.md).
+
 See the diagrams below
 
 ```mermaid

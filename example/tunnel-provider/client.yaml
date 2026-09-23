@@ -1,0 +1,9 @@
+node:
+  name: tunnel-client
+  transport: direct
+
+providers:
+  local: "127.0.0.1:7070"
+
+routes:
+  "example.com": local

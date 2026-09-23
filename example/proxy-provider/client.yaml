@@ -1,0 +1,12 @@
+node:
+  name: proxy-client
+  transport: direct
+
+proxy:
+  listen: "127.0.0.1:1080"
+
+providers:
+  local: "127.0.0.1:7070"
+
+routes:
+  "example.com": local

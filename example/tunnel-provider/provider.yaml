@@ -1,0 +1,6 @@
+node:
+  name: local-provider
+  transport: direct
+
+provider:
+  listen: ":7070"
