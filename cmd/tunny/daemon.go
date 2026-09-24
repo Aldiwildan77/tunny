@@ -7,11 +7,11 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/spf13/cobra"
 
+	daemonProcess "github.com/Aldiwildan77/tunny/cmd/tunny/daemon"
 	daemonLib "github.com/sevlyar/go-daemon"
 )
 
@@ -62,8 +62,7 @@ func readPID(PIDFilePath string) (int, error) {
 }
 
 func processRunning(pid int) bool {
-	err := syscall.Kill(pid, 0)
-	return err == nil || errors.Is(err, syscall.EPERM)
+	return daemonProcess.IsRunning(pid)
 }
 
 func daemonize(isDaemonMode bool, daemonPID string, daemonLog string) (bool, func(), error) {
@@ -141,7 +140,7 @@ func stopDaemon(daemonPID string) error {
 		return nil
 	}
 
-	if err := syscall.Kill(pid, syscall.SIGTERM); err != nil {
+	if err := daemonProcess.Terminate(pid); err != nil {
 		return fmt.Errorf("failed to stop daemon process with PID %d: %w", pid, err)
 	}
 
