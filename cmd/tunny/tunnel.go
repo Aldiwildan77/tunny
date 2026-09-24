@@ -26,6 +26,20 @@ var tunnelCmd = &cobra.Command{
 			return err
 		}
 
+		// Daemonize
+		isParentProcess, cleanup, err := daemonize(daemonMode, daemonPID, daemonLog)
+		if err != nil {
+			return err
+		}
+
+		if isParentProcess {
+			return nil
+		}
+
+		defer cleanup()
+
+		// Standard Run
+
 		ctx, stop := signal.NotifyContext(
 			context.Background(),
 			os.Interrupt,

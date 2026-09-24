@@ -32,6 +32,11 @@ need a system-wide TUN interface.
 
 See the [proxy and provider example](example/proxy-provider/README.md).
 
+## Running as a daemon
+
+See [DAEMON.md](DAEMON.md) for Tunny-managed `--daemon` mode and instructions
+for creating `systemd` services on Linux or `launchd` services on macOS.
+
 ## Control plane and data plane
 
 ### Control plane
