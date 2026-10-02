@@ -96,6 +96,72 @@ make build
 
 The global flags are `--config`, `--daemon`, `--pid`, and `--log`. The commands are `proxy`, `provider`, `tunnel`, `daemon status`, and `daemon stop`.
 
+## Docker and Kubernetes
+
+Tunny is a normal Go process, so it can run as a container in a distributed
+network. A typical deployment separates the roles:
+
+```text
+Client or application pod
+     |
+     v
+   Tunny proxy/tunnel
+     |
+     v
+   provider service or node
+     |
+     v
+  Internet
+```
+
+### Docker Compose
+
+The repository includes a multi-node Docker Compose lab at
+[example/bgp-multi-node/docker-compose.yaml](example/bgp-multi-node/docker-compose.yaml).
+It builds three Tunny provider containers alongside FRR and gdnsd. The
+example is an experiment that combines several networking layers; it is not a
+general-purpose Tunny cluster manager.
+
+Start that lab from the example directory with:
+
+```bash
+cd example/bgp-multi-node
+docker compose up --build
+```
+
+The Compose file exposes the provider listeners on host ports `17071`,
+`17072`, and `17073`. The client configuration is
+[client/tunny.yaml](example/bgp-multi-node/client/tunny.yaml), and the Tunny
+client must be run separately as described by the example.
+
+### Kubernetes
+
+Tunny can be packaged into Kubernetes Deployments, StatefulSets, or Jobs by
+building a container image that runs one of the existing commands:
+
+```text
+tunny proxy   -c /etc/tunny/config.yaml
+tunny provider -c /etc/tunny/config.yaml
+tunny tunnel  -c /etc/tunny/config.yaml
+```
+
+Use a Kubernetes `Service` or another reachable network address for provider
+listeners, then reference that address in the client's `providers` map. Store
+the YAML configuration in a ConfigMap and credentials such as a Tailscale auth
+key in a Secret.
+
+Proxy deployments normally need only a TCP service for the SOCKS5 listener.
+Provider deployments need a TCP service for the provider listener. Tunnel
+deployments require platform-specific TUN access and network privileges; the
+current tunnel implementation is not a drop-in Kubernetes CNI or cluster
+overlay. See [docs/tunnel.md](docs/tunnel.md) for its current platform
+limitations.
+
+This repository does not currently include a maintained Docker image,
+Kubernetes manifests, Helm chart, operator, service discovery, or automatic
+provider pool. Those are deployment work to build around the Tunny binary, not
+implemented features of the core routing logic.
+
 ## Control plane
 
 Enable it in a config file:
@@ -139,3 +205,9 @@ The same documentation is synchronized to the [GitHub Wiki](https://github.com/A
 ## Related technologies
 
 Tailscale, WireGuard, WARP, HAProxy, Nginx, Envoy, GSLB/GeoDNS, BGP, ECMP, anyhop, and global-egress address adjacent layers or related egress workflows. Tunny's intended abstraction is a route-aware client that chooses a reachable provider node for selected outbound traffic; it does not claim to replace those systems.
+
+## Repository structure
+
+Tunny uses a flat repository structure to keep core platform development
+simple. The main packages stay easy to find at the top level, while related
+capabilities remain separated into focused packages.
