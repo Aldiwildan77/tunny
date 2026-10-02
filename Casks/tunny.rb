@@ -4,21 +4,21 @@ cask "tunny" do
 
   on_macos do
     on_arm do
-      sha256 "a3cd8029d43bb53d559f8f35dac24c5b0d50c3a84a8f6f88a24c5a5e740c256b"
+      sha256 "20c00237e29f3064f0719a81b3891c7e5015ff3d85a531c371426d00a4d6dc4a"
       url "https://github.com/Aldiwildan77/tunny/releases/download/v#{version}/tunny_#{version}_darwin_arm64.tar.gz"
     end
     on_intel do
-      sha256 "e35c3cf4f7edd344fb8ea1010bf952dc94759e2e132d6e08518397d749df011e"
+      sha256 "d42c6357830b1e2b2b71d2a1d3180be5b855ab0102e2b0362f40eaf9d1c847f2"
       url "https://github.com/Aldiwildan77/tunny/releases/download/v#{version}/tunny_#{version}_darwin_amd64.tar.gz"
     end
   end
   on_linux do
     on_arm do
-      sha256 "36de05b9cddb0b11eddcb1bf5f2d22868fff0c570a41f55cfc6bf3f5c72cde53"
+      sha256 "750d936b23dddf35c5c1327b1332def48ff7e02677c61d9d4360e353f6f2d081"
       url "https://github.com/Aldiwildan77/tunny/releases/download/v#{version}/tunny_#{version}_linux_arm64.tar.gz"
     end
     on_intel do
-      sha256 "2b4e796fa0f656f627c5d0cc8a34ccfe6426ab6af07f3a8ed0ec83a06338a700"
+      sha256 "704a6745fe1b83b3e3dfd34be2c7ac9b5eea39cbc77e71d198627b97eba743fc"
       url "https://github.com/Aldiwildan77/tunny/releases/download/v#{version}/tunny_#{version}_linux_amd64.tar.gz"
     end
   end
