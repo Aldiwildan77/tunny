@@ -9,6 +9,10 @@ Choose one method for a given process. Do not combine `--daemon` with `systemd` 
 
 ## Tunny-managed daemon mode
 
+On Linux and macOS, `daemon stop` sends `SIGTERM`. On Windows, the same
+command uses the platform process API and terminates the process forcefully.
+The PID-file workflow is the same on all supported build targets.
+
 Build a stable executable first:
 
 ```bash

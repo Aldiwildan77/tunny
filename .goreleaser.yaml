@@ -1,9 +1,10 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+
 version: 2
 
 before:
   hooks:
     - go mod tidy
-    - cp .example.config.yaml config.yaml
 
 builds:
   - main: ./cmd/tunny
@@ -22,7 +23,8 @@ builds:
       - arm64
 
 archives:
-  - formats:
+  - id: tunny
+    formats:
       - tar.gz
 
     name_template: >-
@@ -32,7 +34,8 @@ archives:
       {{ .Arch }}
 
     files:
-      - config.yaml
+      - src: .example.config.yaml
+        dst: config.yaml
 
     format_overrides:
       - goos: windows
@@ -41,3 +44,52 @@ archives:
 
 checksum:
   name_template: checksums.txt
+
+nfpms:
+  - id: tunny
+    package_name: tunny
+    vendor: Aldiwildan77
+    homepage: https://github.com/Aldiwildan77/tunny
+    maintainer: Aldiwildan77
+    description: Route selected internet traffic through trusted nodes using TUN and SOCKS5.
+    license: MIT
+    formats:
+      - deb
+      - rpm
+      - apk
+    bindir: /usr/bin
+    contents:
+      - src: ./.example.config.yaml
+        dst: /etc/tunny/config.yaml
+        type: config
+
+homebrew_casks:
+  - name: tunny
+    binaries:
+      - tunny
+    url:
+      template: https://github.com/Aldiwildan77/tunny/releases/download/{{ .Tag }}/{{ .ArtifactName }}
+    repository:
+      owner: Aldiwildan77
+      name: tunny
+      token: "{{ .Env.GITHUB_TOKEN }}"
+    homepage: https://github.com/Aldiwildan77/tunny
+    description: Route selected internet traffic through trusted nodes using TUN and SOCKS5.
+
+chocolateys:
+  - name: tunny
+    ids:
+      - tunny
+    title: Tunny
+    authors: Aldiwildan77
+    project_url: https://github.com/Aldiwildan77/tunny
+    url_template: https://github.com/Aldiwildan77/tunny/releases/download/{{ .Tag }}/{{ .ArtifactName }}
+    icon_url: https://raw.githubusercontent.com/Aldiwildan77/tunny/master/logo.png
+    license_url: https://github.com/Aldiwildan77/tunny/blob/master/LICENSE
+    project_source_url: https://github.com/Aldiwildan77/tunny
+    tags: network proxy vpn tun
+    summary: Route selected internet traffic through trusted nodes.
+    description: Route selected internet traffic through trusted nodes using TUN and SOCKS5.
+    release_notes: https://github.com/Aldiwildan77/tunny/releases/tag/{{ .Tag }}
+    api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
+    source_repo: https://push.chocolatey.org/

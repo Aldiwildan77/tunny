@@ -1,0 +1,60 @@
+name: Sync documentation to Wiki
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - README.md
+      - DAEMON.md
+      - docs/**
+      - .github/workflows/wiki.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Sync documentation
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SOURCE_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          wiki_dir="${RUNNER_TEMP}/tunny.wiki"
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/${SOURCE_REPOSITORY}.wiki.git" "$wiki_dir"
+
+          cd "$wiki_dir"
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+
+          cp "${GITHUB_WORKSPACE}/README.md" Home.md
+          cp "${GITHUB_WORKSPACE}/DAEMON.md" daemon.md
+          cp -R "${GITHUB_WORKSPACE}/docs/." .
+
+          # Wiki pages live at the wiki root; point repository-only references
+          # back to the source repository instead of leaving broken links.
+          while IFS= read -r -d '' page; do
+            sed -i \
+              -e 's#](docs/#](#g' \
+              -e 's#](DAEMON.md)#](daemon.md)#g' \
+              -e "s#](\.\./control-plane/#](https://github.com/${SOURCE_REPOSITORY}/blob/master/control-plane/#g" \
+              -e "s#](\.\./example/#](https://github.com/${SOURCE_REPOSITORY}/blob/master/example/#g" \
+              -e "s#](\.\./\.\.\/example/#](https://github.com/${SOURCE_REPOSITORY}/blob/master/example/#g" \
+              "$page"
+          done < <(find . -type f -name '*.md' -print0)
+
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add --all
+          git diff --cached --quiet && exit 0
+          git commit -m "docs: sync repository documentation"
+          git push origin HEAD
