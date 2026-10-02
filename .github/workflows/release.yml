@@ -25,6 +25,13 @@ jobs:
           ref: ${{ inputs.tag || github.ref }}
           fetch-depth: 0
 
+      - name: Use current release configuration for manual tags
+        if: ${{ inputs.tag != '' }}
+        shell: pwsh
+        run: |
+          $config = git show origin/master:.goreleaser.yaml
+          [System.IO.File]::WriteAllText((Join-Path $PWD '.goreleaser.yaml'), $config)
+
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
