@@ -31,7 +31,13 @@ jobs:
           set -euo pipefail
 
           wiki_dir="${RUNNER_TEMP}/tunny.wiki"
-          git clone "https://x-access-token:${GH_TOKEN}@github.com/${SOURCE_REPOSITORY}.wiki.git" "$wiki_dir"
+          wiki_url="https://x-access-token:${GH_TOKEN}@github.com/${SOURCE_REPOSITORY}.wiki.git"
+          if ! git ls-remote "$wiki_url" >/dev/null 2>&1; then
+            echo "::warning::GitHub Wiki is not available yet. Enable Wiki in repository Settings > Features and create the first Wiki page, then rerun this workflow."
+            exit 0
+          fi
+
+          git clone "$wiki_url" "$wiki_dir"
 
           cd "$wiki_dir"
           find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
