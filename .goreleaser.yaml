@@ -89,3 +89,4 @@ chocolateys:
     release_notes: https://github.com/Aldiwildan77/tunny/releases/tag/{{ .Tag }}
     api_key: "{{ .Env.CHOCOLATEY_API_KEY }}"
     source_repo: https://push.chocolatey.org/
+    skip_publish: true
