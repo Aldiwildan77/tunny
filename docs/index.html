@@ -28,22 +28,9 @@
     a { color: var(--blue); }
     a:hover { color: var(--blue-dark); }
     .wrap { width: min(var(--max), calc(100% - 40px)); margin: 0 auto; }
-    .topbar {
-      border-bottom: 1px solid var(--line);
-      background: #fff;
-    }
-    .nav {
-      min-height: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 18px;
-    }
-    .brand {
-      color: var(--ink);
-      font: 700 1rem/1 Arial, Helvetica, sans-serif;
-      text-decoration: none;
-    }
+    .topbar { border-bottom: 1px solid var(--line); background: #fff; }
+    .nav { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+    .brand { color: var(--ink); font: 700 1rem/1 Arial, Helvetica, sans-serif; text-decoration: none; }
     nav { display: flex; gap: 14px; flex-wrap: wrap; }
     nav a { font: 400 .82rem/1 Arial, Helvetica, sans-serif; text-decoration: none; }
     .hero {
@@ -75,21 +62,13 @@
       text-decoration: none;
     }
     .button.secondary { color: var(--blue); background: transparent; }
-    .network {
-      padding: 26px;
-      border: 1px solid var(--line);
-      background: #f2f2f2;
-    }
-    .network-label { margin: 0 0 20px; color: var(--muted); font: 700 .76rem/1.2 Arial, Helvetica, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
-    .node-row { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 10px; align-items: center; }
-    .node { min-height: 88px; padding: 17px 12px; border: 1px solid var(--line); background: var(--panel); text-align: center; }
-    .node strong { display: block; font: 700 1rem/1.2 Arial, Helvetica, sans-serif; }
-    .node small { display: block; margin-top: 8px; color: var(--muted); font-size: .82rem; }
-    .arrow { color: var(--blue); font: 700 1.4rem/1 Arial, Helvetica, sans-serif; }
+    .mermaid { min-height: 180px; padding: 20px; border: 1px solid var(--line); background: #f2f2f2; }
+    .core-diagram { margin: 34px 0 10px; }
     section { padding: 78px 0; border-bottom: 1px solid var(--line); }
     .section-intro { max-width: 690px; color: var(--muted); }
     .columns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 32px; }
     .item { padding: 22px 0; border-top: 3px solid var(--blue); }
+    .use-case-grid .item { border-top: 0; }
     .item p { margin: 0; color: var(--muted); }
     .health-layout { display: grid; grid-template-columns: .9fr 1.1fr; gap: 54px; align-items: start; }
     .status-list { margin: 0; padding: 0; list-style: none; }
@@ -106,8 +85,7 @@
       .hero { padding-top: 58px; }
       .hero-grid, .health-layout { grid-template-columns: 1fr; gap: 34px; }
       .columns, .docs { grid-template-columns: 1fr; }
-      .node-row { grid-template-columns: 1fr; }
-      .arrow { transform: rotate(90deg); justify-self: center; }
+      .mermaid { padding: 8px; }
     }
   </style>
 </head>
@@ -116,8 +94,8 @@
     <div class="wrap nav">
       <a class="brand" href="#top">tunny</a>
       <nav aria-label="Primary navigation">
-        <a href="#serve">Serve</a>
-        <a href="#health">Health</a>
+        <a href="#core">Core</a>
+        <a href="#usecases">Use cases</a>
         <a href="#docs">Docs</a>
         <a href="https://github.com/Aldiwildan77/tunny">GitHub</a>
       </nav>
@@ -126,38 +104,35 @@
 
   <main id="top">
     <section class="hero">
-      <div class="wrap hero-grid">
-        <div>
-          <h1>Tunny</h1>
-          <p class="lede">Programmable egress routing for multi-node networks.</p>
-          <div class="actions">
-            <a class="button" href="#serve">See serve mode</a>
-            <a class="button secondary" href="https://github.com/Aldiwildan77/tunny/blob/master/README.md">Read the README</a>
-          </div>
-        </div>
-        <div class="network" aria-label="Tunny network path diagram">
-          <p class="network-label">A routed connection</p>
-          <div class="node-row">
-            <div class="node"><strong>Client</strong><small>HTTP / SOCKS5 / TUN</small></div>
-            <span class="arrow" aria-hidden="true">-&gt;</span>
-            <div class="node"><strong>Tunny</strong><small>route + health</small></div>
-            <span class="arrow" aria-hidden="true">-&gt;</span>
-            <div class="node"><strong>Provider</strong><small>internet egress</small></div>
-          </div>
-        </div>
+      <div class="wrap">
+        <h1>Tunny documentation</h1>
+        <p class="lede">Reference documentation for a programmable networking tool that routes selected traffic through reachable provider nodes.</p>
       </div>
     </section>
 
-    <section id="serve">
+    <section id="core">
       <div class="wrap">
-        <h2>One serve command, shared routing.</h2>
-        <p class="section-intro">Serve mode composes the HTTP forward proxy, SOCKS5 listener, and transparent TUN ingress around one route table and provider map. Disable TUN when you only need application proxying.</p>
-        <div class="columns">
-          <div class="item"><h3>HTTP and SOCKS5</h3><p>Give applications a familiar proxy endpoint while unmatched destinations continue over the local network.</p></div>
-          <div class="item"><h3>Transparent TUN</h3><p>Apply the same route decisions to system traffic where the platform and required privileges support a TUN device.</p></div>
-          <div class="item"><h3>Ordered failover</h3><p>Prefer the first configured provider, skip unhealthy nodes, and try the next candidate for new connections.</p></div>
+        <p class="eyebrow">Tunny core</p>
+        <h2>Route selected traffic through providers.</h2>
+        <p class="section-intro">Tunny keeps ingress, route matching, provider policy, health state, and egress transport in one core path. Serve is one way to expose that path, alongside the proxy and tunnel compatibility modes.</p>
+        <div class="mermaid core-diagram" aria-label="Tunny core architecture diagram">
+      flowchart LR
+        ingress["Serve ingress<br/>HTTP / SOCKS5 / TUN"] --> route["Route table<br/>hostname or IP"]
+        route --> policy["Provider policy<br/>ordered candidates"]
+        policy --> health["Health state<br/>PING / PONG"]
+        health --> transport["Node transport<br/>direct or Tailscale"]
+        transport --> provider["Provider<br/>TCP egress"]
+        classDef core fill:#ffffff,stroke:#000000,color:#000000,stroke-width:1px
+        classDef decision fill:#ffffff,stroke:#0645ad,color:#000000,stroke-width:2px
+        class ingress,route,transport,provider core
+        class policy,health decision
+        linkStyle default stroke:#0645ad,stroke-width:2px
         </div>
-        <div class="actions"><a class="button secondary" href="serve.html">Serve mode documentation</a></div>
+        <div class="columns">
+          <div class="item"><h3>Ingress</h3><p>Accept application or system traffic through HTTP, SOCKS5, or TUN without changing the core route decision.</p></div>
+          <div class="item"><h3>Route matching</h3><p>Match a destination hostname or resolved IP to a configured provider or an ordered provider policy.</p></div>
+          <div class="item"><h3>Provider transport</h3><p>Reach the selected provider through direct or Tailscale transport, then let it perform the final TCP egress.</p></div>
+        </div>
       </div>
     </section>
 
@@ -184,6 +159,33 @@ health:
   timeout: 2s
   failure_threshold: 2
   recovery_threshold: 3</code></pre>
+      </div>
+    </section>
+
+    <section id="usecases">
+      <div class="wrap">
+        <p class="eyebrow">Use cases</p>
+        <h2>Practical routing for real networks.</h2>
+        <p class="section-intro">Tunny is useful when a destination needs a deliberate egress path, while the rest of the network should continue normally.</p>
+        <div class="columns use-case-grid">
+          <div class="item">
+            <h3>Multi-region egress</h3>
+            <p>Send selected services through VPS providers in Japan, Singapore, the United States, or another reachable region.</p>
+          </div>
+          <div class="item">
+            <h3>Application routing</h3>
+            <p>Give browsers, scripts, and services HTTP or SOCKS5 access without changing the host's default network path.</p>
+          </div>
+          <div class="item">
+            <h3>System traffic</h3>
+            <p>Use transparent TUN ingress for selected system traffic where the operating system supports the required device access.</p>
+          </div>
+          <div class="item">
+            <h3>Provider resilience</h3>
+            <p>Order provider candidates, check readiness with PING/PONG, and fail over new connections when a provider becomes unhealthy.</p>
+          </div>
+        </div>
+        <div class="actions"><a class="button secondary" href="concepts.html">Read the concepts</a></div>
       </div>
     </section>
 
@@ -215,8 +217,19 @@ health:
 
   <footer>
     <div class="wrap">
-      <p>Tunny v0.4.0 · Open source networking tool · <a href="https://github.com/Aldiwildan77/tunny">View source on GitHub</a></p>
+      <p>Tunny · Open source networking tool · <a href="https://github.com/Aldiwildan77/tunny">View source on GitHub</a></p>
     </div>
   </footer>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, theme: "base", themeVariables: {
+    background: "#f2f2f2",
+    primaryColor: "#ffffff",
+    primaryTextColor: "#000000",
+    primaryBorderColor: "#000000",
+    lineColor: "#0645ad",
+    fontFamily: "Arial, Helvetica, sans-serif"
+  }});
+</script>
 </body>
 </html>
