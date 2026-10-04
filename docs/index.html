@@ -33,6 +33,12 @@
     .brand { color: var(--ink); font: 700 1rem/1 Arial, Helvetica, sans-serif; text-decoration: none; }
     nav { display: flex; gap: 14px; flex-wrap: wrap; }
     nav a { font: 400 .82rem/1 Arial, Helvetica, sans-serif; text-decoration: none; }
+    .docs-shell { width: min(1220px, calc(100% - 40px)); margin: 0 auto; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 42px; }
+    .sidebar { align-self: start; position: sticky; top: 20px; padding: 24px 0; border-right: 1px solid var(--line); }
+    .sidebar-title { margin: 0 24px 14px 0; color: var(--muted); font: 700 .75rem/1.2 Arial, Helvetica, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+    .sidebar a { display: block; padding: 7px 24px 7px 0; font-size: .9rem; text-decoration: none; }
+    .sidebar a:hover { text-decoration: underline; }
+    .article { min-width: 0; }
     .hero {
       padding: 58px 0 52px;
       border-bottom: 1px solid var(--line);
@@ -64,13 +70,16 @@
     .button.secondary { color: var(--blue); background: transparent; }
     .mermaid { min-height: 180px; padding: 20px; border: 1px solid var(--line); background: #f2f2f2; }
     .core-diagram { margin: 34px 0 10px; }
-    section { padding: 78px 0; border-bottom: 1px solid var(--line); }
+    section { padding: 48px 0; border-bottom: 1px solid var(--line); }
     .section-intro { max-width: 690px; color: var(--muted); }
     .columns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 32px; }
     .item { padding: 22px 0; border-top: 3px solid var(--blue); }
     .use-case-grid .item { border-top: 0; }
     .item p { margin: 0; color: var(--muted); }
     .health-layout { display: grid; grid-template-columns: .9fr 1.1fr; gap: 54px; align-items: start; }
+    .config-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-top: 30px; }
+    .config-card { min-width: 0; }
+    .config-card h3 { margin-top: 0; }
     .status-list { margin: 0; padding: 0; list-style: none; }
     .status-list li { display: flex; align-items: baseline; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--line); }
     .dot { width: 9px; height: 9px; flex: 0 0 9px; border-radius: 50%; background: var(--blue); }
@@ -82,8 +91,12 @@
     footer p { margin: 0; }
     @media (max-width: 780px) {
       .nav { align-items: flex-start; padding: 16px 0; flex-direction: column; }
+      .docs-shell { width: min(var(--max), calc(100% - 40px)); grid-template-columns: 1fr; gap: 0; }
+      .sidebar { position: static; padding: 20px 0; border-right: 0; border-bottom: 1px solid var(--line); }
+      .sidebar a { display: inline-block; margin-right: 16px; padding-right: 0; }
       .hero { padding-top: 58px; }
       .hero-grid, .health-layout { grid-template-columns: 1fr; gap: 34px; }
+      .config-grid { grid-template-columns: 1fr; }
       .columns, .docs { grid-template-columns: 1fr; }
       .mermaid { padding: 8px; }
     }
@@ -95,6 +108,7 @@
       <a class="brand" href="#top">tunny</a>
       <nav aria-label="Primary navigation">
         <a href="#core">Core</a>
+        <a href="#configuration">Configuration</a>
         <a href="#usecases">Use cases</a>
         <a href="#docs">Docs</a>
         <a href="https://github.com/Aldiwildan77/tunny">GitHub</a>
@@ -102,7 +116,22 @@
     </div>
   </header>
 
-  <main id="top">
+  <main id="top" class="docs-shell">
+    <aside class="sidebar" aria-label="Documentation navigation">
+      <p class="sidebar-title">Tunny documentation</p>
+      <a href="#core">Core concept</a>
+      <a href="#configuration">Configuration</a>
+      <a href="#health">Provider health</a>
+      <a href="#usecases">Use cases</a>
+      <a href="#docs">Documentation index</a>
+      <p class="sidebar-title">Reference</p>
+      <a href="installation.html">Installation</a>
+      <a href="routing.html">Routing</a>
+      <a href="providers.html">Providers</a>
+      <a href="control-plane.html">Control plane</a>
+      <a href="https://github.com/Aldiwildan77/tunny">Source repository</a>
+    </aside>
+    <article class="article">
     <section class="hero">
       <div class="wrap">
         <h1>Tunny documentation</h1>
@@ -133,6 +162,86 @@
           <div class="item"><h3>Route matching</h3><p>Match a destination hostname or resolved IP to a configured provider or an ordered provider policy.</p></div>
           <div class="item"><h3>Provider transport</h3><p>Reach the selected provider through direct or Tailscale transport, then let it perform the final TCP egress.</p></div>
         </div>
+      </div>
+    </section>
+
+    <section id="configuration">
+      <div class="wrap">
+        <p class="eyebrow">Configuration</p>
+        <h2>Production example: many routes, many providers.</h2>
+        <p class="section-intro">The Serve node owns the route table and ordered provider policies. Each provider runs the same provider configuration on a separate reachable node or region.</p>
+        <div class="config-grid">
+          <div class="config-card">
+            <h3>Serve node: client.yaml</h3>
+            <pre><code>node:
+  name: edge-client
+  transport: tailscale
+
+proxy:
+  listen: "127.0.0.1:1080"
+  http_listen: "127.0.0.1:8080"
+
+tunnel:
+  enabled: true
+
+providers:
+  japan: "provider-japan:7070"
+  singapore: "provider-singapore:7070"
+  us: "provider-us:7070"
+
+routes:
+  "api.example.com": japan
+  "media.example.com": singapore
+  "payments.example.com": us
+
+route_policies:
+  "stream.example.com":
+    mode: failover
+    providers: [japan, singapore, us]
+
+health:
+  enabled: true
+  interval: 5s
+  timeout: 2s
+  failure_threshold: 2
+  recovery_threshold: 3</code></pre>
+          </div>
+          <div class="config-card">
+            <h3>Provider nodes: provider.yaml</h3>
+            <pre><code>node:
+  name: provider-japan
+  transport: tailscale
+
+provider:
+  listen: ":7070"
+
+# Deploy the same file on:
+# provider-singapore
+# provider-us</code></pre>
+          </div>
+        </div>
+        <div class="mermaid core-diagram" aria-label="Tunny serve and provider runtime diagram">
+flowchart LR
+  app["Application or system traffic"] --> serve["tunny serve<br/>client.yaml"]
+  serve --> route["Route match<br/>hostname or IP"]
+  route --> direct["Direct provider<br/>one route"]
+  route --> policy["Failover policy<br/>ordered providers"]
+  policy --> health["Health state<br/>skip unhealthy"]
+  health --> providers["Provider nodes<br/>Japan / Singapore / US"]
+  direct --> providers
+  providers --> target["Destination TCP service"]
+  classDef process fill:#ffffff,stroke:#000000,color:#000000,stroke-width:1px
+  classDef routeNode fill:#ffffff,stroke:#0645ad,color:#000000,stroke-width:2px
+  class app,serve,direct,providers,target process
+  class route,policy,health routeNode
+  linkStyle default stroke:#0645ad,stroke-width:2px
+        </div>
+        <p class="section-intro">Start one provider process on each provider node, then start Serve on the client:</p>
+<pre><code># On provider-japan, provider-singapore, and provider-us
+tunny provider -c provider.yaml
+
+# On edge-client
+tunny serve -c client.yaml</code></pre>
       </div>
     </section>
 
@@ -213,6 +322,7 @@ health:
         </div>
       </div>
     </section>
+    </article>
   </main>
 
   <footer>
