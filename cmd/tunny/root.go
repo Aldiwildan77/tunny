@@ -28,5 +28,6 @@ func init() {
 	rootCmd.AddCommand(providerCmd)
 	rootCmd.AddCommand(proxyCmd)
 	rootCmd.AddCommand(tunnelCmd)
+	rootCmd.AddCommand(serveCmd)
 	rootCmd.AddCommand(daemonCmd)
 }

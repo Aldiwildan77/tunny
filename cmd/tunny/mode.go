@@ -6,6 +6,7 @@ const (
 	ModeProvider Mode = "provider"
 	ModeProxy    Mode = "proxy"
 	ModeTunnel   Mode = "tunnel"
+	ModeServe    Mode = "serve"
 )
 
 func (m Mode) String() string {

@@ -38,7 +38,8 @@ type TailscaleConfig struct {
 }
 
 type ProxyConfig struct {
-	Listen string `yaml:"listen" default:"127.0.0.1:1080"`
+	Listen     string `yaml:"listen" default:"127.0.0.1:1080"`
+	HTTPListen string `yaml:"http_listen"`
 }
 
 type ProviderConfig struct {
@@ -46,6 +47,7 @@ type ProviderConfig struct {
 }
 
 type TunnelConfig struct {
+	Enabled   bool   `yaml:"enabled" default:"true"`
 	Interface string `yaml:"interface" default:"utun"`
 	MTU       int    `yaml:"mtu" default:"1500"`
 }

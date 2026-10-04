@@ -5,7 +5,7 @@
 ```mermaid
 flowchart TB
        Client["Client application or host traffic"]
-       Entry["Tunny proxy or TUN entry"]
+       Entry["Tunny serve: HTTP, SOCKS5, or TUN ingress"]
        Match["Exact hostname/IP route matching"]
        ProviderName["Configured provider name"]
        Transport["Direct or Tailscale transport"]
@@ -48,6 +48,7 @@ automatic failover algorithm.
 ```mermaid
 flowchart TB
        subgraph Input["Client input"]
+              HTTP["HTTP proxy"]
               SOCKS["SOCKS5 proxy"]
               TUN["TUN device"]
        end
@@ -56,6 +57,7 @@ flowchart TB
        Forward["Provider CONNECT protocol"]
        Egress["Provider TCP egress"]
 
+       HTTP --> Route
        SOCKS --> Route
        TUN --> Route
        Route --> Node
@@ -63,14 +65,16 @@ flowchart TB
        Forward --> Egress
 ```
 
-Both entry modes share route matching and node transport. The control plane
-is separate from this data path and changes routes or reports status.
+All serve entry modes share route matching and node transport. The `proxy`
+and `tunnel` commands select one of these same ingress paths for compatibility.
+The control plane is separate from this data path and changes routes or
+reports status.
 
 ```text
 Client application or host traffic
               |
               v
-       Tunny proxy or tunnel
+       Tunny serve
               |
               v
         Exact route matching

@@ -13,6 +13,7 @@ This documentation is also synchronized to the [GitHub Wiki](https://github.com/
 - [Transports](transports.md)
 - [Tunnel mode](tunnel.md)
 - [Proxy mode](proxy.md)
+- [Serve mode](serve.md)
 - [Control plane](control-plane.md)
 - [Multi-node operation](multi-node.md)
 - [Examples](examples/single-provider.md)

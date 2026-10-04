@@ -1,0 +1,16 @@
+node:
+  name: public-network-gateway
+  transport: direct
+
+proxy:
+  listen: "0.0.0.0:1080"
+  http_listen: "0.0.0.0:8080"
+
+tunnel:
+  enabled: true
+
+providers:
+  local: "127.0.0.1:7070"
+
+routes:
+  "example.com": local

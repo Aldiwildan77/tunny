@@ -2,7 +2,10 @@
 
 ## Client
 
-The client is the Tunny process accepting traffic in `proxy` or `tunnel` mode. It owns the route table and provider address map.
+The client is the Tunny process accepting traffic. `serve` is the combined
+mode and starts HTTP/SOCKS5 proxy ingress plus transparent TUN ingress by
+default. `proxy` and `tunnel` remain compatibility modes for running one
+ingress type. The client owns the route table and provider address map.
 
 ## Provider
 
@@ -24,9 +27,18 @@ A provider pool would mean several interchangeable providers for one route. The 
 
 A transport is the node-to-node connectivity mechanism used by Tunny's `Node` interface. Current choices are `direct` and `tailscale`.
 
+## Serve
+
+Serve mode combines the HTTP, SOCKS5, and transparent TUN ingress paths. It
+uses one route table and provider map for all enabled flows. Transparent mode
+requires platform support and elevated privileges; set `tunnel.enabled` to
+`false` for proxy-only serve operation. See [serve.md](serve.md).
+
 ## Tunnel
 
-Tunnel mode uses a TUN device and a gVisor IPv4 stack to process system traffic. See [tunnel.md](tunnel.md).
+Tunnel mode uses a TUN device and a gVisor IPv4 stack to process system
+traffic. It is also the transparent ingress used by serve mode. See
+[tunnel.md](tunnel.md).
 
 ## Proxy
 

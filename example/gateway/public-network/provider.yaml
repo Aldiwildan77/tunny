@@ -1,0 +1,6 @@
+node:
+  name: public-network-provider
+  transport: direct
+
+provider:
+  listen: "127.0.0.1:7070"

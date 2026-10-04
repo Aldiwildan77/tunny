@@ -29,23 +29,23 @@ Tunny sits beside other networking tools rather than replacing them:
 | --- | --- | --- |
 | Node connectivity | Tailscale, WireGuard | Uses direct networking or Tailscale to reach a provider. |
 | Endpoint selection | GSLB, GeoDNS | Routes a flow according to configured destination-to-provider rules. |
-| Application proxying | HAProxy, Nginx, Envoy | Provides a SOCKS5 entry point and a small provider forwarding protocol. |
+| Application proxying | HAProxy, Nginx, Envoy | Provides generic HTTP and SOCKS5 entry points and a small provider forwarding protocol. |
 | Network path selection | BGP, ECMP | Can be part of the network that makes providers reachable. |
 | Internet egress selection | Egress gateways and VPN exits | Treats reachable machines as provider nodes and sends selected traffic through one. |
 
-Tunny is not primarily a VPN, generic load balancer, GSLB, or IP-changing service. TUN and SOCKS5 are entry modes for applying its egress-routing behavior.
+Tunny is not primarily a VPN, generic load balancer, GSLB, or IP-changing service. HTTP, SOCKS5, and TUN are ingress modes for applying its egress-routing behavior.
 
 ## Use cases
 
 - **Multiple VPS egress points:** map selected destinations to VPS instances in Japan, Singapore, the US, or another reachable location.
 - **Geo-specific egress:** deliberately send a destination through a chosen provider instead of selecting the nearest endpoint.
-- **VPN-like system routing:** use the TUN mode for selected system traffic where the platform's TUN implementation supports routing.
-- **Application routing:** use the SOCKS5 mode when only selected applications should use Tunny.
+- **VPN-like system routing:** use transparent TUN ingress for selected system traffic where the platform's TUN implementation supports routing.
+- **Application routing:** use HTTP or SOCKS5 ingress when applications or devices support proxy settings.
 - **Multi-provider experiments:** operate several provider nodes and combine Tunny with external health checks, DNS, BGP, or ECMP. Automatic provider pools and health-aware selection are not implemented by core Tunny today.
 
 ## How it works
 
-1. A client sends traffic to the SOCKS5 proxy or TUN interface.
+1. A client sends traffic to `serve`, which starts HTTP/SOCKS5 ingress and transparent TUN ingress together by default.
 2. Tunny identifies the destination hostname or IP address.
 3. The route table checks for an exact configured hostname or resolved IP match.
 4. Unmatched traffic uses the normal network path.
@@ -56,8 +56,9 @@ The current route table maps one hostname to one provider name. It does not impl
 
 ## Components
 
-- **Tunnel:** reads IPv4 packets from a TUN device and uses gVisor TCP/UDP handlers; the current provider forwarding protocol is TCP-only.
-- **Proxy:** exposes a SOCKS5 listener and routes matched connections through a provider.
+- **Serve:** combines HTTP, SOCKS5, and transparent TUN ingress using one route table and provider map. Transparent mode requires elevated privileges and can be disabled with `tunnel.enabled: false`.
+- **Proxy:** compatibility mode exposing only the SOCKS5 listener.
+- **Tunnel:** compatibility mode exposing only the transparent TUN path.
 - **Provider:** accepts Tunny's internal `CONNECT host:port` request and dials the destination.
 - **Node:** supplies direct or Tailscale `Dial` and `Listen` operations.
 - **Control plane:** exposes gRPC and an HTTP/JSON gateway for status and route changes.
@@ -94,7 +95,7 @@ make build
 ./tunny --help
 ```
 
-The global flags are `--config`, `--daemon`, `--pid`, and `--log`. The commands are `proxy`, `provider`, `tunnel`, `daemon status`, and `daemon stop`.
+The global flags are `--config`, `--daemon`, `--pid`, and `--log`. The commands are `serve`, `proxy`, `tunnel`, `provider`, `daemon status`, and `daemon stop`.
 
 ## Docker and Kubernetes
 
