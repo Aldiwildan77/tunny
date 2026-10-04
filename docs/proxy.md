@@ -1,3 +1,8 @@
+---
+layout: default
+title: Proxy mode
+---
+
 # Proxy mode
 
 Proxy mode exposes a SOCKS5 listener for application traffic.

@@ -1,3 +1,8 @@
+---
+layout: default
+title: Serve mode
+---
+
 # Serve mode
 
 Serve mode runs the configured client ingress services together: HTTP forward
@@ -36,6 +41,33 @@ All enabled ingress modes use the same route table and provider map. Set
 remains platform- and privilege-dependent, and provider-side UDP forwarding is
 still limited by the existing provider path.
 
+## Health-aware failover
+
+Serve mode starts the provider health checker alongside its ingress services.
+Use `route_policies` when a destination should have an ordered provider list:
+
+```yaml
+providers:
+  japan: 100.64.0.10:7070
+  singapore: 100.64.0.11:7070
+
+route_policies:
+  example.com:
+    mode: failover
+    providers: [japan, singapore]
+
+health:
+  enabled: true
+  interval: 5s
+  timeout: 2s
+  failure_threshold: 2
+  recovery_threshold: 3
+```
+
+New connections prefer `japan`, skip it after health failures, and try
+`singapore` automatically. Existing TCP connections are not moved between
+providers. Recovery checks return a provider to the ordered candidate list.
+
 ## Routing behavior
 
 HTTP and SOCKS5 ingress use the shared route table. Exact route matches are
@@ -56,4 +88,4 @@ curl --proxy socks5h://127.0.0.1:1080 https://example.com
 ```
 
 The gateway examples for private networks and TVs are under
-[example/gateway](../example/gateway/README.md).
+[example/gateway](https://github.com/Aldiwildan77/tunny/tree/master/example/gateway).

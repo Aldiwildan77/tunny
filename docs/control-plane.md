@@ -1,3 +1,8 @@
+---
+layout: default
+title: Control plane
+---
+
 # Control plane
 
 The control plane is optional and disabled by default. Enable it in YAML:
@@ -19,19 +24,21 @@ Every data-plane command can start the control plane alongside its normal servic
 | `ListRoutes` | `GET /v1/routes` | Lists the current hostname-to-provider mappings. |
 | `SetRoute` | `POST /v1/routes` | Adds or updates a hostname-to-provider mapping. |
 | `DeleteRoute` | `DELETE /v1/routes/{hostname}` | Removes a hostname mapping. |
+| `ListProviderHealth` | `GET /v1/providers/health` | Reports provider state, counters, timestamps, and the latest error. |
 
 Example:
 
 ```bash
 curl http://127.0.0.1:7072/v1/status
 curl http://127.0.0.1:7072/v1/routes
+curl http://127.0.0.1:7072/v1/providers/health
 curl -X POST http://127.0.0.1:7072/v1/routes \
   -H 'Content-Type: application/json' \
   -d '{"hostname":"example.com","provider":"local"}'
 curl -X DELETE http://127.0.0.1:7072/v1/routes/example.com
 ```
 
-The gRPC service exposes the same four operations. Use [control.proto](../control-plane/control.proto) with `grpcurl` when direct gRPC access is preferred.
+The gRPC service exposes the same five operations. Use [control.proto](../control-plane/control.proto) with `grpcurl` when direct gRPC access is preferred.
 
 ## Current behavior
 

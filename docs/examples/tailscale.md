@@ -1,3 +1,8 @@
+---
+layout: default
+title: Tailscale example
+---
+
 # Tailscale transport
 
 Tailscale is an optional transport for reaching provider nodes. It does not choose the egress provider; the Tunny route table still maps destinations to provider names.

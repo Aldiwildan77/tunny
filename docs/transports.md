@@ -1,3 +1,8 @@
+---
+layout: default
+title: Transports
+---
+
 # Transports
 
 The node transport is separate from route and provider selection. It answers how the client reaches the configured provider address.

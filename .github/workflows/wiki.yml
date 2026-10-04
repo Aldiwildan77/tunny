@@ -9,6 +9,7 @@ on:
       - DAEMON.md
       - docs/**
       - .github/workflows/wiki.yml
+      - .github/workflows/pages.yml
   workflow_dispatch:
 
 permissions:
@@ -44,14 +45,22 @@ jobs:
 
           cp "${GITHUB_WORKSPACE}/README.md" Home.md
           cp "${GITHUB_WORKSPACE}/DAEMON.md" daemon.md
-          cp -R "${GITHUB_WORKSPACE}/docs/." .
+          # Markdown under docs/ is the source of truth. Jekyll metadata,
+          # layouts, and the Pages landing HTML stay on GitHub Pages only.
+          while IFS= read -r -d '' source; do
+            target="${source#${GITHUB_WORKSPACE}/docs/}"
+            mkdir -p "$(dirname "$target")"
+            cp "$source" "$target"
+          done < <(find "${GITHUB_WORKSPACE}/docs" -type f -name '*.md' -print0)
 
           # Wiki pages live at the wiki root; point repository-only references
           # back to the source repository instead of leaving broken links.
           while IFS= read -r -d '' page; do
+            sed -i '/^---$/,/^---$/d' "$page"
             sed -i \
               -e 's#](docs/#](#g' \
               -e 's#](DAEMON.md)#](daemon.md)#g' \
+              -e 's#](\([^)]*\)\.html)#](\1.md)#g' \
               -e "s#](\.\./control-plane/#](https://github.com/${SOURCE_REPOSITORY}/blob/master/control-plane/#g" \
               -e "s#](\.\./example/#](https://github.com/${SOURCE_REPOSITORY}/blob/master/example/#g" \
               -e "s#](\.\./\.\.\/example/#](https://github.com/${SOURCE_REPOSITORY}/blob/master/example/#g" \

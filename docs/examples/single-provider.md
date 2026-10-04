@@ -1,3 +1,8 @@
+---
+layout: default
+title: Single-provider example
+---
+
 # Single provider
 
 This is the smallest working example: one local provider and one local SOCKS5 client.
@@ -24,4 +29,4 @@ The provider listens on `127.0.0.1:7070`. The proxy listens on `127.0.0.1:1080` 
 curl --proxy socks5h://127.0.0.1:1080 --connect-timeout 5 --max-time 10 https://example.com
 ```
 
-The full example README is [here](../../example/proxy-provider/README.md).
+The full example README is [here](https://github.com/Aldiwildan77/tunny/blob/master/example/proxy-provider/README.md).

@@ -82,6 +82,9 @@ See [docs/architecture.md](docs/architecture.md) and [docs/concepts.md](docs/con
 
 ## Quick start
 
+See [Installation](docs/installation.md) for release binaries, Homebrew,
+source builds, first configuration, and permission notes.
+
 The smallest working example uses a local provider and a local SOCKS5 proxy:
 
 ```bash
@@ -188,13 +191,29 @@ control_plane:
   http_listen: 127.0.0.1:7072
 ```
 
-The HTTP gateway exposes `GET /v1/status`, `GET /v1/routes`, `POST /v1/routes`, and `DELETE /v1/routes/{hostname}`. See [docs/control-plane.md](docs/control-plane.md).
+The HTTP gateway exposes `GET /v1/status`, `GET /v1/routes`, `GET /v1/providers/health`, `POST /v1/routes`, and `DELETE /v1/routes/{hostname}`. See [docs/control-plane.md](docs/control-plane.md).
+
+## Serve mode and health checks
+
+`tunny serve` starts the configured HTTP, SOCKS5, and transparent TUN ingress
+paths together. All enabled ingress modes share the same routes, provider map,
+and health-aware failover behavior. Use `route_policies` to order providers for
+a destination; the first healthy provider is preferred for new connections.
+
+The active checker sends `PING` through the configured node transport and
+expects `PONG` from each provider. Consecutive failure and recovery thresholds
+prevent flapping, and existing connections remain on their current provider.
+See [docs/serve.md](docs/serve.md), [docs/routing.md](docs/routing.md), and
+[docs/providers.md](docs/providers.md).
 
 ## Documentation
+
+Project website: [tunny networking](https://aldiwildan77.github.io/tunny/).
 
 The same documentation is synchronized to the [GitHub Wiki](https://github.com/Aldiwildan77/tunny/wiki) when changes land on `master`.
 
 - [Concepts](docs/concepts.md)
+- [Installation](docs/installation.md)
 - [Architecture](docs/architecture.md)
 - [Routing](docs/routing.md)
 - [Providers](docs/providers.md)

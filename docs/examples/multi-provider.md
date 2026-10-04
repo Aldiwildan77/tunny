@@ -1,3 +1,8 @@
+---
+layout: default
+title: Multi-provider example
+---
+
 # Multi-provider configuration
 
 The core configuration can name several providers and map different destinations to them:

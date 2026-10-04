@@ -1,3 +1,8 @@
+---
+layout: default
+title: Concepts
+---
+
 # Concepts
 
 ## Client
@@ -21,7 +26,9 @@ A route maps a hostname to a provider name, for example `example.com: local`. At
 
 ## Provider pool
 
-A provider pool would mean several interchangeable providers for one route. The configuration currently maps each route to one provider name. Pool selection and automatic failover are planned, not implemented.
+A provider pool is an ordered list of providers for one route. Configure one with
+`route_policies` and `mode: failover`; health-aware selection skips unhealthy
+providers for new connections and preserves the configured order.
 
 ## Transport
 
@@ -32,17 +39,17 @@ A transport is the node-to-node connectivity mechanism used by Tunny's `Node` in
 Serve mode combines the HTTP, SOCKS5, and transparent TUN ingress paths. It
 uses one route table and provider map for all enabled flows. Transparent mode
 requires platform support and elevated privileges; set `tunnel.enabled` to
-`false` for proxy-only serve operation. See [serve.md](serve.md).
+`false` for proxy-only serve operation. See [serve.html](serve.html).
 
 ## Tunnel
 
 Tunnel mode uses a TUN device and a gVisor IPv4 stack to process system
 traffic. It is also the transparent ingress used by serve mode. See
-[tunnel.md](tunnel.md).
+[tunnel.html](tunnel.html).
 
 ## Proxy
 
-Proxy mode exposes a SOCKS5 listener for application traffic. See [proxy.md](proxy.md).
+Proxy mode exposes a SOCKS5 listener for application traffic. See [proxy.html](proxy.html).
 
 ## Control plane
 

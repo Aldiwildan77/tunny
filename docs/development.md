@@ -1,3 +1,8 @@
+---
+layout: default
+title: Development
+---
+
 # Development
 
 ## Build and test
@@ -25,11 +30,26 @@ make check
 
 ## Configuration notes
 
-Configuration is YAML. Environment variables are expanded before parsing, so values such as `${TS_AUTHKEY}` can be used. Defaults and currently validated fields are documented in [concepts.md](concepts.md) and the example files.
+Configuration is YAML. Environment variables are expanded before parsing, so values such as `${TS_AUTHKEY}` can be used. Defaults and currently validated fields are documented in [concepts.html](concepts.html) and the example files.
 
 ## Release
 
 Tags matching `v*` trigger the GitHub Actions release workflow. GoReleaser builds Linux, macOS, and Windows binaries for amd64 and arm64, then creates archives and package artifacts configured in `.goreleaser.yaml`.
+
+## Documentation publishing
+
+The `docs/` directory is the single source of truth for the public
+documentation. Changes pushed to `master` trigger both publishing workflows:
+
+- `pages.yml` builds the Markdown with Jekyll and deploys GitHub Pages.
+- `wiki.yml` copies the Markdown pages to the GitHub Wiki, removing Jekyll
+	front matter and translating rendered `.html` links back to Wiki `.md`
+	links.
+
+Keep documentation pages and examples under `docs/`. Do not edit generated Wiki
+pages or use the Pages output as a second source tree. GitHub Pages must be
+configured to use **GitHub Actions** as its source, and the repository Wiki
+must be enabled before the first Wiki sync can succeed.
 
 ## Adding behavior
 

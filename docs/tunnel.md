@@ -1,3 +1,8 @@
+---
+layout: default
+title: Tunnel mode
+---
+
 # Tunnel and transparent serve mode
 
 Tunnel mode accepts system traffic through a TUN device and forwards it with a
