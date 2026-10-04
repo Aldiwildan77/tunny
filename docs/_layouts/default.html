@@ -5,30 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ page.title }} | Tunny</title>
   <style>
-    :root { --ink: #17212b; --muted: #5f6b76; --paper: #f5f3ee; --panel: #fffdf8; --line: #d8d4ca; --blue: #155e75; --orange: #c35b2b; --max: 900px; }
+    :root { --ink: #000; --muted: #444; --paper: #fff; --panel: #fff; --line: #c8c8c8; --blue: #0645ad; --blue-dark: #001b44; --max: 900px; }
     * { box-sizing: border-box; }
-    body { margin: 0; color: var(--ink); background: var(--paper); font: 17px/1.7 Georgia, "Times New Roman", serif; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font: 17px/1.65 Arial, Helvetica, sans-serif; }
     a { color: var(--blue); }
-    a:hover { color: var(--orange); }
-    .topbar { border-bottom: 1px solid var(--line); background: var(--panel); }
+    a:hover { color: var(--blue-dark); }
+    .topbar { border-bottom: 1px solid var(--line); background: #fff; }
     .nav, main, footer { width: min(var(--max), calc(100% - 40px)); margin: 0 auto; }
-    .nav { min-height: 68px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-    .brand { color: var(--ink); font: 700 1.25rem/1 "Trebuchet MS", Verdana, sans-serif; text-decoration: none; }
-    nav { display: flex; gap: 18px; flex-wrap: wrap; }
-    nav a { font: 600 .85rem/1 "Trebuchet MS", Verdana, sans-serif; text-decoration: none; }
+    .nav { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+    .brand { color: var(--ink); font: 700 1rem/1 Arial, Helvetica, sans-serif; text-decoration: none; }
+    nav { display: flex; gap: 14px; flex-wrap: wrap; }
+    nav a { font: 400 .82rem/1 Arial, Helvetica, sans-serif; text-decoration: none; }
     main { padding: 64px 0 80px; }
-    .eyebrow { color: var(--orange); font: 700 .75rem/1.2 "Trebuchet MS", Verdana, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
-    h1, h2, h3 { font-family: "Trebuchet MS", Verdana, sans-serif; line-height: 1.2; }
+    .eyebrow { color: var(--blue); font: 700 .75rem/1.2 Arial, Helvetica, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+    h1, h2, h3 { font-family: Arial, Helvetica, sans-serif; line-height: 1.2; }
     h1 { margin: 12px 0 28px; font-size: clamp(2rem, 5vw, 3.6rem); }
     h2 { margin-top: 42px; padding-top: 18px; border-top: 2px solid var(--blue); font-size: 1.65rem; }
     h3 { font-size: 1.15rem; }
-    code { padding: .12em .3em; background: #e8e7e0; font-size: .88em; }
-    pre { overflow: auto; padding: 20px; border-left: 4px solid var(--orange); color: #e9eee9; background: #0f3d4c; }
+    code { padding: .12em .3em; background: #f0f0f0; font-size: .88em; }
+    pre { overflow: auto; padding: 20px; border-left: 4px solid var(--blue); color: #fff; background: #111; }
     pre code { padding: 0; color: inherit; background: transparent; }
     table { width: 100%; border-collapse: collapse; display: block; overflow-x: auto; }
     th, td { padding: 9px 12px; border: 1px solid var(--line); text-align: left; }
-    th { background: #e8e7e0; font-family: "Trebuchet MS", Verdana, sans-serif; }
-    blockquote { margin: 20px 0; padding: 4px 20px; border-left: 4px solid var(--orange); color: var(--muted); }
+    th { background: #f0f0f0; font-family: Arial, Helvetica, sans-serif; }
+    blockquote { margin: 20px 0; padding: 4px 20px; border-left: 4px solid var(--blue); color: var(--muted); }
     footer { padding: 24px 0 44px; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
     @media (max-width: 680px) { .nav { align-items: flex-start; padding: 16px 0; flex-direction: column; } main { padding-top: 42px; } }
   </style>
