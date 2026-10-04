@@ -10,12 +10,7 @@
     body { margin: 0; color: var(--ink); background: var(--paper); font: 17px/1.65 Arial, Helvetica, sans-serif; }
     a { color: var(--blue); }
     a:hover { color: var(--blue-dark); }
-    .topbar { border-bottom: 1px solid var(--line); background: #fff; }
-    .nav, footer { width: min(var(--max), calc(100% - 40px)); margin: 0 auto; }
-    .nav { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
-    .brand { color: var(--ink); font: 700 1rem/1 Arial, Helvetica, sans-serif; text-decoration: none; }
-    nav { display: flex; gap: 14px; flex-wrap: wrap; }
-    nav a { font: 400 .82rem/1 Arial, Helvetica, sans-serif; text-decoration: none; }
+    footer { width: min(var(--max), calc(100% - 40px)); margin: 0 auto; }
     .docs-shell { width: min(1220px, calc(100% - 40px)); margin: 0 auto; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 42px; }
     .sidebar { align-self: start; position: sticky; top: 20px; padding: 24px 0; border-right: 1px solid var(--line); }
     .sidebar-title { margin: 0 24px 14px 0; color: var(--muted); font: 700 .75rem/1.2 Arial, Helvetica, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
@@ -28,7 +23,7 @@
     h2 { margin-top: 42px; padding-top: 18px; border-top: 2px solid var(--blue); font-size: 1.65rem; }
     h3 { font-size: 1.15rem; }
     code { padding: .12em .3em; background: #f0f0f0; font-size: .88em; }
-    pre { overflow: auto; padding: 20px; border-left: 4px solid var(--blue); color: #fff; background: #111; }
+    pre { overflow: auto; padding: 20px; border-left: 4px solid var(--blue); color: #fff; background: #111; font-size: .9rem; }
     pre code { padding: 0; color: inherit; background: transparent; }
     table { width: 100%; border-collapse: collapse; display: block; overflow-x: auto; }
     th, td { padding: 9px 12px; border: 1px solid var(--line); text-align: left; }
@@ -36,27 +31,17 @@
     blockquote { margin: 20px 0; padding: 4px 20px; border-left: 4px solid var(--blue); color: var(--muted); }
     footer { padding: 24px 0 44px; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; }
     @media (max-width: 680px) {
-      .nav { align-items: flex-start; padding: 16px 0; flex-direction: column; }
       .docs-shell { width: min(var(--max), calc(100% - 40px)); grid-template-columns: 1fr; gap: 0; }
       .sidebar { position: static; padding: 20px 0; border-right: 0; border-bottom: 1px solid var(--line); }
       .sidebar a { display: inline-block; margin-right: 16px; padding-right: 0; }
       main { padding-top: 42px; }
+      h1 { font-size: 2.2rem; }
+      h2 { font-size: 1.45rem; }
+      pre { padding: 16px; font-size: .78rem; }
     }
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="nav">
-      <a class="brand" href="{{ '/' | relative_url }}">tunny</a>
-      <nav aria-label="Documentation navigation">
-        <a href="{{ '/' | relative_url }}">Home</a>
-        <a href="{{ '/serve.html' | relative_url }}">Serve</a>
-        <a href="{{ '/routing.html' | relative_url }}">Routing</a>
-        <a href="{{ '/providers.html' | relative_url }}">Providers</a>
-        <a href="https://github.com/Aldiwildan77/tunny">GitHub</a>
-      </nav>
-    </div>
-  </header>
   <div class="docs-shell">
     <aside class="sidebar" aria-label="Documentation navigation">
       <p class="sidebar-title">Tunny documentation</p>
