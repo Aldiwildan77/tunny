@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/creasty/defaults"
 	"github.com/goccy/go-yaml"
@@ -23,8 +24,23 @@ type Config struct {
 	Tunnel   TunnelConfig   `yaml:"tunnel"`
 
 	// Mapper
-	Providers map[string]string `yaml:"providers" default:"{}"`
-	Routes    map[string]string `yaml:"routes" default:"{}"`
+	Providers     map[string]string      `yaml:"providers" default:"{}"`
+	Routes        map[string]string      `yaml:"routes" default:"{}"`
+	RoutePolicies map[string]RoutePolicy `yaml:"route_policies"`
+	Health        HealthConfig           `yaml:"health"`
+}
+
+type RoutePolicy struct {
+	Mode      string   `yaml:"mode" validate:"omitempty,oneof=failover"`
+	Providers []string `yaml:"providers"`
+}
+
+type HealthConfig struct {
+	Enabled           bool          `yaml:"enabled" default:"true"`
+	Interval          time.Duration `yaml:"interval" default:"5s"`
+	Timeout           time.Duration `yaml:"timeout" default:"2s"`
+	FailureThreshold  int           `yaml:"failure_threshold" default:"2"`
+	RecoveryThreshold int           `yaml:"recovery_threshold" default:"3"`
 }
 
 type NodeConfig struct {

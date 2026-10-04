@@ -43,12 +43,14 @@ var serveCmd = &cobra.Command{
 		}
 		defer n.Close()
 
-		routes := route.New(cfg.Routes)
-		if err := startControlPlane(ctx, cfg, routes, ModeServe.String()); err != nil {
+		routes := route.NewWithPolicies(cfg.Routes, routePolicies(cfg))
+		healthManager := newHealthManager(cfg, n)
+		healthManager.Start(ctx)
+		if err := startControlPlane(ctx, cfg, routes, healthManager, ModeServe.String()); err != nil {
 			return err
 		}
 
-		dialer := &proxy.Dialer{Node: n, Routes: routes, Providers: cfg.Providers}
+		dialer := &proxy.Dialer{Node: n, Routes: routes, Providers: cfg.Providers, Health: healthManager}
 		ingresses := make([]gateway.Ingress, 0, 3)
 
 		if cfg.Proxy.HTTPListen != "" {

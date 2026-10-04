@@ -10,6 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/Aldiwildan77/tunny/health"
 	"github.com/Aldiwildan77/tunny/route"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
@@ -21,6 +22,7 @@ type Server struct {
 	UnimplementedControlPlaneServer
 
 	routes            *route.Table
+	health            *health.Manager
 	mode              string
 	nodeName          string
 	transport         string
@@ -28,18 +30,51 @@ type Server struct {
 	activeConnections atomic.Int64
 }
 
-func NewServer(routes *route.Table, mode, nodeName, transport string) (*Server, error) {
+func NewServer(routes *route.Table, mode, nodeName, transport string, healthManagers ...*health.Manager) (*Server, error) {
 	if routes == nil {
 		return nil, fmt.Errorf("routes cannot be nil")
 	}
 
+	var healthManager *health.Manager
+	if len(healthManagers) > 0 {
+		healthManager = healthManagers[0]
+	}
+
 	return &Server{
 		routes:    routes,
+		health:    healthManager,
 		mode:      mode,
 		nodeName:  nodeName,
 		transport: transport,
 		startedAt: time.Now(),
 	}, nil
+}
+
+func (s *Server) ListProviderHealth(context.Context, *ListProviderHealthRequest) (*ProviderHealthList, error) {
+	result := &ProviderHealthList{}
+	if s.health == nil {
+		return result, nil
+	}
+	for _, status := range s.health.Snapshot() {
+		result.Providers = append(result.Providers, &ProviderHealth{
+			Provider:             status.Provider,
+			Address:              status.Address,
+			State:                string(status.State),
+			ConsecutiveFailures:  int32(status.ConsecutiveFailures),
+			ConsecutiveSuccesses: int32(status.ConsecutiveSuccesses),
+			LastCheckUnix:        unix(status.LastCheck),
+			LastTransitionUnix:   unix(status.LastTransition),
+			LastError:            status.LastError,
+		})
+	}
+	return result, nil
+}
+
+func unix(value time.Time) int64 {
+	if value.IsZero() {
+		return 0
+	}
+	return value.Unix()
 }
 
 func (s *Server) Serve(ctx context.Context, grpcAddress, httpAddress string) error {

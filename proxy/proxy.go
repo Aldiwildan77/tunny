@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 
+	"github.com/Aldiwildan77/tunny/health"
 	"github.com/Aldiwildan77/tunny/node"
 	"github.com/Aldiwildan77/tunny/route"
 	"github.com/armon/go-socks5"
@@ -19,14 +20,20 @@ type proxy struct {
 	Node      node.Node
 	Routes    *route.Table
 	Providers map[string]string
+	Health    *health.Manager
 }
 
-func New(listen string, node node.Node, routes *route.Table, providers map[string]string) Proxy {
+func New(listen string, node node.Node, routes *route.Table, providers map[string]string, healthManagers ...*health.Manager) Proxy {
+	var healthManager *health.Manager
+	if len(healthManagers) > 0 {
+		healthManager = healthManagers[0]
+	}
 	return &proxy{
 		Listen:    listen,
 		Node:      node,
 		Routes:    routes,
 		Providers: providers,
+		Health:    healthManager,
 	}
 }
 
@@ -35,6 +42,7 @@ func (p *proxy) Run(ctx context.Context) error {
 		Node:      p.Node,
 		Routes:    p.Routes,
 		Providers: p.Providers,
+		Health:    p.Health,
 	}
 
 	conf := &socks5.Config{

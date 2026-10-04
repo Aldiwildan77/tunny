@@ -55,8 +55,10 @@ var tunnelCmd = &cobra.Command{
 			return err
 		}
 
-		routes := route.New(cfg.Routes)
-		if err := startControlPlane(ctx, cfg, routes, ModeTunnel.String()); err != nil {
+		routes := route.NewWithPolicies(cfg.Routes, routePolicies(cfg))
+		healthManager := newHealthManager(cfg, n)
+		healthManager.Start(ctx)
+		if err := startControlPlane(ctx, cfg, routes, healthManager, ModeTunnel.String()); err != nil {
 			return err
 		}
 
@@ -67,6 +69,7 @@ var tunnelCmd = &cobra.Command{
 			Node:      n,
 			Routes:    routes,
 			Providers: cfg.Providers,
+			Health:    healthManager,
 		}
 
 		ips := make([]net.IP, 0)

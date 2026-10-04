@@ -41,7 +41,7 @@ Tunny is not primarily a VPN, generic load balancer, GSLB, or IP-changing servic
 - **Geo-specific egress:** deliberately send a destination through a chosen provider instead of selecting the nearest endpoint.
 - **VPN-like system routing:** use transparent TUN ingress for selected system traffic where the platform's TUN implementation supports routing.
 - **Application routing:** use HTTP or SOCKS5 ingress when applications or devices support proxy settings.
-- **Multi-provider experiments:** operate several provider nodes and combine Tunny with external health checks, DNS, BGP, or ECMP. Automatic provider pools and health-aware selection are not implemented by core Tunny today.
+- **Multi-provider experiments:** operate several provider nodes with ordered failover policies and active provider health checks.
 
 ## How it works
 
@@ -52,7 +52,21 @@ Tunny is not primarily a VPN, generic load balancer, GSLB, or IP-changing servic
 5. Matched traffic is sent to the configured provider address.
 6. The provider connects to the destination over TCP and forwards bytes in both directions.
 
-The current route table maps one hostname to one provider name. It does not implement wildcards, CIDR matching, longest-prefix matching, automatic provider selection, or failover.
+Routes map one hostname to a provider name by default. `route_policies` can instead define ordered failover candidates; providers are checked with Tunny's PING/PONG protocol and unhealthy candidates are skipped for new connections.
+
+```yaml
+route_policies:
+  netflix.com:
+    mode: failover
+    providers: [id1, id2, id3]
+
+health:
+  enabled: true
+  interval: 5s
+  timeout: 2s
+  failure_threshold: 2
+  recovery_threshold: 3
+```
 
 ## Components
 
@@ -197,11 +211,11 @@ The same documentation is synchronized to the [GitHub Wiki](https://github.com/A
 
 ## Status
 
-**Implemented:** direct and Tailscale nodes, exact hostname/IP route matching, SOCKS5 proxying, the provider forwarding protocol, control-plane status and route APIs, and platform-specific daemon process handling.
+**Implemented:** direct and Tailscale nodes, exact hostname/IP route matching, ordered provider failover with health checks and recovery, SOCKS5 proxying, the provider forwarding protocol, control-plane status/route/health APIs, and platform-specific daemon process handling.
 
 **Experimental:** the BGP/gdnsd topology under [example/bgp-multi-node](example/bgp-multi-node) combines Tunny with FRR and gdnsd. It is an example environment, not a built-in Tunny routing algorithm.
 
-**Planned or not implemented:** automatic provider pools, health-aware selection, latency/load-aware routing, wildcard/CIDR route matching, IPv6 tunnel routing, and automatic failover in the core route table.
+**Planned or not implemented:** latency/load-aware routing, wildcard/CIDR route matching, and IPv6 tunnel routing.
 
 ## Related technologies
 

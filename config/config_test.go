@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -68,6 +69,7 @@ routes:
 				Tunnel:    TunnelConfig{Enabled: true, Interface: "tun0", MTU: 1400},
 				Providers: map[string]string{"indonesia": "indonesia:7070", "japan": "japan:7070"},
 				Routes:    map[string]string{"netflix.com": "indonesia", "example.jp": "japan"},
+				Health:    HealthConfig{Enabled: true, Interval: 5 * time.Second, Timeout: 2 * time.Second, FailureThreshold: 2, RecoveryThreshold: 3},
 			},
 		},
 		{
@@ -86,6 +88,7 @@ node:
 				Tunnel:    TunnelConfig{Enabled: true, Interface: "utun", MTU: 1500},
 				Providers: map[string]string{},
 				Routes:    map[string]string{},
+				Health:    HealthConfig{Enabled: true, Interval: 5 * time.Second, Timeout: 2 * time.Second, FailureThreshold: 2, RecoveryThreshold: 3},
 			},
 		},
 		{
@@ -106,6 +109,7 @@ tailscale:
 				Tunnel:    TunnelConfig{Enabled: true, Interface: "utun", MTU: 1500},
 				Providers: map[string]string{},
 				Routes:    map[string]string{},
+				Health:    HealthConfig{Enabled: true, Interval: 5 * time.Second, Timeout: 2 * time.Second, FailureThreshold: 2, RecoveryThreshold: 3},
 			},
 		},
 		{
@@ -130,6 +134,7 @@ tailscale:
 				Tunnel:    TunnelConfig{Enabled: true, Interface: "utun", MTU: 1500},
 				Providers: map[string]string{},
 				Routes:    map[string]string{},
+				Health:    HealthConfig{Enabled: true, Interval: 5 * time.Second, Timeout: 2 * time.Second, FailureThreshold: 2, RecoveryThreshold: 3},
 			},
 		},
 		{

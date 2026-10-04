@@ -52,8 +52,10 @@ var providerCmd = &cobra.Command{
 			return err
 		}
 
-		routes := route.New(cfg.Routes)
-		if err := startControlPlane(ctx, cfg, routes, ModeProvider.String()); err != nil {
+		routes := route.NewWithPolicies(cfg.Routes, routePolicies(cfg))
+		healthManager := newHealthManager(cfg, n)
+		healthManager.Start(ctx)
+		if err := startControlPlane(ctx, cfg, routes, healthManager, ModeProvider.String()); err != nil {
 			return err
 		}
 

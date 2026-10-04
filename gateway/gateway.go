@@ -18,7 +18,7 @@ type SOCKS5 struct {
 }
 
 func NewSOCKS5(listen string, dialer *proxy.Dialer) Ingress {
-	return &SOCKS5{proxy: proxy.New(listen, dialer.Node, dialer.Routes, dialer.Providers)}
+	return &SOCKS5{proxy: proxy.New(listen, dialer.Node, dialer.Routes, dialer.Providers, dialer.Health)}
 }
 
 func (s *SOCKS5) Run(ctx context.Context) error {

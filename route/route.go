@@ -8,22 +8,35 @@ import (
 )
 
 type Table struct {
-	Routes map[string]string
-	IPs    map[string]string
-	Hosts  map[string]string
+	Routes   map[string]string
+	Policies map[string][]string
+	IPs      map[string]string
+	Hosts    map[string]string
 
 	mu sync.RWMutex
 }
 
 func New(routes map[string]string) *Table {
+	return NewWithPolicies(routes, nil)
+}
+
+func NewWithPolicies(routes map[string]string, policies map[string][]string) *Table {
 	if routes == nil {
 		routes = make(map[string]string)
 	}
+	if policies == nil {
+		policies = make(map[string][]string)
+	}
+	normalizedPolicies := make(map[string][]string, len(policies))
+	for hostname, providers := range policies {
+		normalizedPolicies[strings.ToLower(hostname)] = append([]string(nil), providers...)
+	}
 
 	table := &Table{
-		Routes: routes,
-		IPs:    make(map[string]string),
-		Hosts:  make(map[string]string),
+		Routes:   routes,
+		Policies: normalizedPolicies,
+		IPs:      make(map[string]string),
+		Hosts:    make(map[string]string),
 	}
 
 	for hostname, provider := range routes {
@@ -43,6 +56,28 @@ func New(routes map[string]string) *Table {
 	}
 
 	return table
+}
+
+func (t *Table) MatchCandidates(host string) ([]string, bool) {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
+
+	host = strings.ToLower(host)
+	if providers, ok := t.Policies[host]; ok && len(providers) > 0 {
+		return append([]string(nil), providers...), true
+	}
+	if provider, ok := t.Routes[host]; ok {
+		return []string{provider}, true
+	}
+	if provider, ok := t.IPs[host]; ok {
+		if routeHost, exists := t.Hosts[host]; exists {
+			if providers, policyExists := t.Policies[routeHost]; policyExists && len(providers) > 0 {
+				return append([]string(nil), providers...), true
+			}
+		}
+		return []string{provider}, true
+	}
+	return nil, false
 }
 
 func (t *Table) GetRoute(hostname string) (string, bool) {
@@ -86,21 +121,10 @@ func (t *Table) RemoveRoute(hostname string) {
 }
 
 func (t *Table) Match(host string) (string, bool) {
-	t.mu.RLock()
-	defer t.mu.RUnlock()
-
-	host = strings.ToLower(host)
-
-	// Hostname match
-	if provider, ok := t.Routes[host]; ok {
-		return provider, true
+	providers, ok := t.MatchCandidates(host)
+	if ok && len(providers) > 0 {
+		return providers[0], true
 	}
-
-	// IP match
-	if provider, ok := t.IPs[host]; ok {
-		return provider, true
-	}
-
 	return "", false
 }
 

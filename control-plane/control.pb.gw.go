@@ -143,6 +143,27 @@ func local_request_ControlPlane_DeleteRoute_0(ctx context.Context, marshaler run
 	return msg, metadata, err
 }
 
+func request_ControlPlane_ListProviderHealth_0(ctx context.Context, marshaler runtime.Marshaler, client ControlPlaneClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq ListProviderHealthRequest
+		metadata runtime.ServerMetadata
+	)
+	if req.Body != nil {
+		_, _ = io.Copy(io.Discard, req.Body)
+	}
+	msg, err := client.ListProviderHealth(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+}
+
+func local_request_ControlPlane_ListProviderHealth_0(ctx context.Context, marshaler runtime.Marshaler, server ControlPlaneServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var (
+		protoReq ListProviderHealthRequest
+		metadata runtime.ServerMetadata
+	)
+	msg, err := server.ListProviderHealth(ctx, &protoReq)
+	return msg, metadata, err
+}
+
 // RegisterControlPlaneHandlerServer registers the http handlers for service ControlPlane to "mux".
 // UnaryRPC     :call ControlPlaneServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
@@ -228,6 +249,26 @@ func RegisterControlPlaneHandlerServer(ctx context.Context, mux *runtime.ServeMu
 			return
 		}
 		forward_ControlPlane_DeleteRoute_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
+	mux.Handle(http.MethodGet, pattern_ControlPlane_ListProviderHealth_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/tunny.control.v1.ControlPlane/ListProviderHealth", runtime.WithHTTPPathPattern("/v1/providers/health"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ControlPlane_ListProviderHealth_0(annotatedContext, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_ControlPlane_ListProviderHealth_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
 
 	return nil
@@ -337,19 +378,38 @@ func RegisterControlPlaneHandlerClient(ctx context.Context, mux *runtime.ServeMu
 		}
 		forward_ControlPlane_DeleteRoute_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 	})
+	mux.Handle(http.MethodGet, pattern_ControlPlane_ListProviderHealth_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		annotatedContext, err := runtime.AnnotateContext(ctx, mux, req, "/tunny.control.v1.ControlPlane/ListProviderHealth", runtime.WithHTTPPathPattern("/v1/providers/health"))
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ControlPlane_ListProviderHealth_0(annotatedContext, inboundMarshaler, client, req, pathParams)
+		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
+		if err != nil {
+			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		forward_ControlPlane_ListProviderHealth_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+	})
 	return nil
 }
 
 var (
-	pattern_ControlPlane_GetStatus_0   = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "status"}, ""))
-	pattern_ControlPlane_ListRoutes_0  = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "routes"}, ""))
-	pattern_ControlPlane_SetRoute_0    = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "routes"}, ""))
-	pattern_ControlPlane_DeleteRoute_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "routes", "hostname"}, ""))
+	pattern_ControlPlane_GetStatus_0          = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "status"}, ""))
+	pattern_ControlPlane_ListRoutes_0         = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "routes"}, ""))
+	pattern_ControlPlane_SetRoute_0           = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "routes"}, ""))
+	pattern_ControlPlane_DeleteRoute_0        = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "routes", "hostname"}, ""))
+	pattern_ControlPlane_ListProviderHealth_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "providers", "health"}, ""))
 )
 
 var (
-	forward_ControlPlane_GetStatus_0   = runtime.ForwardResponseMessage
-	forward_ControlPlane_ListRoutes_0  = runtime.ForwardResponseMessage
-	forward_ControlPlane_SetRoute_0    = runtime.ForwardResponseMessage
-	forward_ControlPlane_DeleteRoute_0 = runtime.ForwardResponseMessage
+	forward_ControlPlane_GetStatus_0          = runtime.ForwardResponseMessage
+	forward_ControlPlane_ListRoutes_0         = runtime.ForwardResponseMessage
+	forward_ControlPlane_SetRoute_0           = runtime.ForwardResponseMessage
+	forward_ControlPlane_DeleteRoute_0        = runtime.ForwardResponseMessage
+	forward_ControlPlane_ListProviderHealth_0 = runtime.ForwardResponseMessage
 )

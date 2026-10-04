@@ -28,6 +28,11 @@ service ControlPlane {
       delete: "/v1/routes/{hostname}"
     };
   }
+  rpc ListProviderHealth(ListProviderHealthRequest) returns (ProviderHealthList) {
+    option (google.api.http) = {
+      get: "/v1/providers/health"
+    };
+  }
 }
 
 message GetStatusRequest {}
@@ -61,3 +66,20 @@ message DeleteRouteRequest {
 }
 
 message DeleteRouteResponse {}
+
+message ListProviderHealthRequest {}
+
+message ProviderHealth {
+  string provider = 1 [json_name = "provider"];
+  string address = 2 [json_name = "address"];
+  string state = 3 [json_name = "state"];
+  int32 consecutive_failures = 4 [json_name = "consecutive_failures"];
+  int32 consecutive_successes = 5 [json_name = "consecutive_successes"];
+  int64 last_check_unix = 6 [json_name = "last_check_unix"];
+  int64 last_transition_unix = 7 [json_name = "last_transition_unix"];
+  string last_error = 8 [json_name = "last_error"];
+}
+
+message ProviderHealthList {
+  repeated ProviderHealth providers = 1;
+}

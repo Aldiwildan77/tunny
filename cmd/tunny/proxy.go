@@ -52,8 +52,10 @@ var proxyCmd = &cobra.Command{
 			return err
 		}
 
-		routes := route.New(cfg.Routes)
-		if err := startControlPlane(ctx, cfg, routes, ModeProxy.String()); err != nil {
+		routes := route.NewWithPolicies(cfg.Routes, routePolicies(cfg))
+		healthManager := newHealthManager(cfg, n)
+		healthManager.Start(ctx)
+		if err := startControlPlane(ctx, cfg, routes, healthManager, ModeProxy.String()); err != nil {
 			return err
 		}
 
@@ -62,6 +64,7 @@ var proxyCmd = &cobra.Command{
 			n,
 			routes,
 			cfg.Providers,
+			healthManager,
 		)
 
 		return p.Run(ctx)

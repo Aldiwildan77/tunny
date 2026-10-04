@@ -8,6 +8,7 @@ import (
 	"net"
 	"strings"
 
+	"github.com/Aldiwildan77/tunny/health"
 	"github.com/Aldiwildan77/tunny/node"
 	"github.com/Aldiwildan77/tunny/route"
 )
@@ -16,6 +17,7 @@ type Dialer struct {
 	Node      node.Node
 	Routes    *route.Table
 	Providers map[string]string
+	Health    *health.Manager
 }
 
 func (d *Dialer) Dial(ctx context.Context, network, address string) (net.Conn, error) {
@@ -28,78 +30,58 @@ func (d *Dialer) Dial(ctx context.Context, network, address string) (net.Conn, e
 		return nil, err
 	}
 
-	provider, ok := d.Routes.Match(strings.ToLower(host))
+	providers, ok := d.Routes.MatchCandidates(strings.ToLower(host))
 	if !ok {
 		var dialer net.Dialer
 		return dialer.DialContext(ctx, network, address)
 	}
 
-	log.Printf("Routing %s -> %s\n", address, provider)
-
-	providerAddress, ok := d.Providers[provider]
-	if !ok {
-		return nil, &net.OpError{
-			Op:  "dial",
-			Net: network,
-			Err: &net.AddrError{
-				Err:  "provider not found",
-				Addr: provider,
-			},
+	if d.Health != nil {
+		providers = d.Health.Candidates(providers)
+	}
+	var lastErr error
+	for _, provider := range providers {
+		providerAddress, exists := d.Providers[provider]
+		if !exists {
+			lastErr = fmt.Errorf("provider not found: %s", provider)
+			continue
 		}
+
+		log.Printf("Routing %s -> %s\n", address, provider)
+		conn, err := d.Node.Dial(ctx, network, providerAddress)
+		if err == nil {
+			_, err = fmt.Fprintf(conn, "CONNECT %s\n", address)
+		}
+		var reader *bufio.Reader
+		if err == nil {
+			reader = bufio.NewReader(conn)
+			var response string
+			response, err = reader.ReadString('\n')
+			if err == nil && strings.TrimSpace(response) != "OK" {
+				err = fmt.Errorf("provider error: %s", strings.TrimSpace(response))
+			}
+		}
+		if err != nil {
+			if conn != nil {
+				_ = conn.Close()
+			}
+			lastErr = err
+			if d.Health != nil {
+				d.Health.RecordFailure(provider, err)
+			}
+			continue
+		}
+		if d.Health != nil {
+			d.Health.RecordSuccess(provider)
+		}
+		log.Printf("Connected to %s via provider %s\n", address, provider)
+		return &bufferedConn{Conn: conn, reader: reader}, nil
 	}
 
-	conn, err := d.Node.Dial(ctx, network, providerAddress)
-	if err != nil {
-		return nil, &net.OpError{
-			Op:  "dial",
-			Net: network,
-			Err: err,
-		}
+	if lastErr == nil {
+		lastErr = fmt.Errorf("no healthy providers available")
 	}
-
-	if _, err := fmt.Fprintf(conn, "CONNECT %s\n", address); err != nil {
-		conn.Close()
-
-		return nil, &net.OpError{
-			Op:  "write",
-			Net: network,
-			Err: err,
-		}
-	}
-
-	reader := bufio.NewReader(conn)
-
-	response, err := reader.ReadString('\n')
-	if err != nil {
-		conn.Close()
-
-		return nil, &net.OpError{
-			Op:  "read",
-			Net: network,
-			Err: err,
-		}
-	}
-
-	response = strings.TrimSpace(response)
-
-	if response != "OK" {
-		conn.Close()
-
-		log.Printf("Provider %s returned error (!OK): %s\n", provider, response)
-
-		return nil, &net.OpError{
-			Op:  "read",
-			Net: network,
-			Err: fmt.Errorf("provider error: %s", response),
-		}
-	}
-
-	log.Printf("Connected to %s via provider %s\n", address, provider)
-
-	return &bufferedConn{
-		Conn:   conn,
-		reader: reader,
-	}, nil
+	return nil, &net.OpError{Op: "dial", Net: network, Err: lastErr}
 }
 
 type bufferedConn struct {

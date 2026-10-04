@@ -92,6 +92,11 @@ func (p *provider) handle(ctx context.Context, conn net.Conn) {
 
 	log.Printf("parsed request: %q\n", request)
 
+	if request == "PING" {
+		_, _ = conn.Write([]byte("PONG\n"))
+		return
+	}
+
 	const prefix = "CONNECT "
 
 	if !strings.HasPrefix(request, prefix) {
