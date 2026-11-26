@@ -193,6 +193,19 @@ control_plane:
 
 The HTTP gateway exposes `GET /v1/status`, `GET /v1/routes`, `GET /v1/providers/health`, `POST /v1/routes`, and `DELETE /v1/routes/{hostname}`. See [docs/control-plane.md](docs/control-plane.md).
 
+## Observability
+
+Export metrics for every command over OTLP/gRPC: connections and bytes per ingress, per-route latency and error rate, provider dials, health state, TUN packets, control plane calls, and Go runtime:
+
+```yaml
+observability:
+  enabled: true
+  endpoint: localhost:4317
+  insecure: true
+```
+
+Route decisions and failures are also logged as structured `key=value` lines. See [docs/observability.md](docs/observability.md) for the metric catalog per command, collector setup, and queries.
+
 ## Serve mode and health checks
 
 `tunny serve` starts the configured HTTP, SOCKS5, and transparent TUN ingress
@@ -221,6 +234,7 @@ The same documentation is synchronized to the [GitHub Wiki](https://github.com/A
 - [Tunnel mode](docs/tunnel.md)
 - [Proxy mode](docs/proxy.md)
 - [Control plane](docs/control-plane.md)
+- [Observability](docs/observability.md)
 - [Multi-node operation](docs/multi-node.md)
 - [Single-provider example](docs/examples/single-provider.md)
 - [Tailscale example](docs/examples/tailscale.md)

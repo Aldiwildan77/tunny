@@ -92,6 +92,55 @@ node:
 			},
 		},
 		{
+			name: "observability block",
+			content: `
+node:
+  name: observed
+observability:
+  enabled: true
+  endpoint: otel-collector:4317
+  insecure: true
+`,
+			want: &Config{
+				Node:          NodeConfig{Name: "observed", Transport: "tailscale"},
+				Tailscale:     TailscaleConfig{StateDir: filepath.Join(homeDir, ".tunny")},
+				Limiter:       LimiterConfig{Enabled: true, Limit: 10},
+				Control:       ControlConfig{Enabled: false, Listen: "127.0.0.1:7071", HTTPListen: "127.0.0.1:7072"},
+				Observability: ObservabilityConfig{Enabled: true, Endpoint: "otel-collector:4317", Insecure: true},
+				Proxy:         ProxyConfig{Listen: "127.0.0.1:1080"},
+				Provider:      ProviderConfig{Listen: ":7070"},
+				Tunnel:        TunnelConfig{Enabled: true, Interface: "utun", MTU: 1500},
+				Providers:     map[string]string{},
+				Routes:        map[string]string{},
+				Health:        HealthConfig{Enabled: true, Interval: 5 * time.Second, Timeout: 2 * time.Second, FailureThreshold: 2, RecoveryThreshold: 3},
+			},
+		},
+		{
+			name: "explicit false overrides true defaults",
+			content: `
+node:
+  name: disabled
+tunnel:
+  enabled: false
+health:
+  enabled: false
+limiter:
+  enabled: false
+`,
+			want: &Config{
+				Node:      NodeConfig{Name: "disabled", Transport: "tailscale"},
+				Tailscale: TailscaleConfig{StateDir: filepath.Join(homeDir, ".tunny")},
+				Limiter:   LimiterConfig{Enabled: false, Limit: 10},
+				Control:   ControlConfig{Enabled: false, Listen: "127.0.0.1:7071", HTTPListen: "127.0.0.1:7072"},
+				Proxy:     ProxyConfig{Listen: "127.0.0.1:1080"},
+				Provider:  ProviderConfig{Listen: ":7070"},
+				Tunnel:    TunnelConfig{Enabled: false, Interface: "utun", MTU: 1500},
+				Providers: map[string]string{},
+				Routes:    map[string]string{},
+				Health:    HealthConfig{Enabled: false, Interval: 5 * time.Second, Timeout: 2 * time.Second, FailureThreshold: 2, RecoveryThreshold: 3},
+			},
+		},
+		{
 			name: "explicit tilde state_dir is expanded to home",
 			content: `
 node:

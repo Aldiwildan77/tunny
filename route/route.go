@@ -55,29 +55,44 @@ func NewWithPolicies(routes map[string]string, policies map[string][]string) *Ta
 		}
 	}
 
+	table.registerMetrics()
+
 	return table
 }
 
-func (t *Table) MatchCandidates(host string) ([]string, bool) {
+type Match struct {
+	Route     string
+	Providers []string
+}
+
+// For an IP match, Route is the configured hostname the IP was resolved from.
+func (t *Table) Lookup(host string) (Match, bool) {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 
 	host = strings.ToLower(host)
 	if providers, ok := t.Policies[host]; ok && len(providers) > 0 {
-		return append([]string(nil), providers...), true
+		return Match{Route: host, Providers: append([]string(nil), providers...)}, true
 	}
 	if provider, ok := t.Routes[host]; ok {
-		return []string{provider}, true
+		return Match{Route: host, Providers: []string{provider}}, true
 	}
 	if provider, ok := t.IPs[host]; ok {
-		if routeHost, exists := t.Hosts[host]; exists {
-			if providers, policyExists := t.Policies[routeHost]; policyExists && len(providers) > 0 {
-				return append([]string(nil), providers...), true
-			}
+		routeHost, exists := t.Hosts[host]
+		if !exists {
+			return Match{Route: host, Providers: []string{provider}}, true
 		}
-		return []string{provider}, true
+		if providers, policyExists := t.Policies[routeHost]; policyExists && len(providers) > 0 {
+			return Match{Route: routeHost, Providers: append([]string(nil), providers...)}, true
+		}
+		return Match{Route: routeHost, Providers: []string{provider}}, true
 	}
-	return nil, false
+	return Match{}, false
+}
+
+func (t *Table) MatchCandidates(host string) ([]string, bool) {
+	match, ok := t.Lookup(host)
+	return match.Providers, ok
 }
 
 func (t *Table) GetRoute(hostname string) (string, bool) {
@@ -105,6 +120,7 @@ func (t *Table) AddRoute(hostname, provider string) {
 
 	for _, ip := range ips {
 		t.IPs[ip] = provider
+		t.Hosts[ip] = hostname
 	}
 }
 

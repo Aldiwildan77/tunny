@@ -4,12 +4,14 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"net"
 	"strings"
+	"time"
 
 	"github.com/Aldiwildan77/tunny/health"
 	"github.com/Aldiwildan77/tunny/node"
+	"github.com/Aldiwildan77/tunny/observability"
 	"github.com/Aldiwildan77/tunny/route"
 )
 
@@ -30,57 +32,122 @@ func (d *Dialer) Dial(ctx context.Context, network, address string) (net.Conn, e
 		return nil, err
 	}
 
-	providers, ok := d.Routes.MatchCandidates(strings.ToLower(host))
+	match, ok := d.Routes.Lookup(strings.ToLower(host))
 	if !ok {
+		start := time.Now()
 		var dialer net.Dialer
-		return dialer.DialContext(ctx, network, address)
+		conn, err := dialer.DialContext(ctx, network, address)
+		elapsed := time.Since(start)
+		if err != nil {
+			errType := observability.DialErrorType(ctx, err)
+			recordDirect(ctx, network, elapsed, errType)
+			slog.Warn("direct dial failed", "address", address, "error_type", errType, "error", err, "duration", elapsed)
+			return nil, err
+		}
+		recordDirect(ctx, network, elapsed, "")
+		slog.Debug("direct dial", "address", address, "duration", elapsed)
+		return conn, nil
 	}
 
+	start := time.Now()
+	providers := match.Providers
 	if d.Health != nil {
 		providers = d.Health.Candidates(providers)
 	}
+
+	slog.Info("route matched",
+		"address", address,
+		"route", match.Route,
+		"candidates", match.Providers,
+		"healthy", providers,
+	)
+
 	var lastErr error
-	for _, provider := range providers {
+	lastErrType := errNoHealthyProvider
+	for i, provider := range providers {
+		attemptStart := time.Now()
+
+		var conn net.Conn
+		var reader *bufio.Reader
+		var err error
+
+		errType := errProviderNotFound
 		providerAddress, exists := d.Providers[provider]
 		if !exists {
-			lastErr = fmt.Errorf("provider not found: %s", provider)
-			continue
+			err = fmt.Errorf("provider not found: %s", provider)
 		}
-
-		log.Printf("Routing %s -> %s\n", address, provider)
-		conn, err := d.Node.Dial(ctx, network, providerAddress)
 		if err == nil {
+			errType = errProviderUnreachable
+			conn, err = d.Node.Dial(ctx, network, providerAddress)
+		}
+		if err == nil {
+			errType = errHandshake
 			_, err = fmt.Fprintf(conn, "CONNECT %s\n", address)
 		}
-		var reader *bufio.Reader
 		if err == nil {
 			reader = bufio.NewReader(conn)
 			var response string
 			response, err = reader.ReadString('\n')
 			if err == nil && strings.TrimSpace(response) != "OK" {
+				errType = errProviderRejected
 				err = fmt.Errorf("provider error: %s", strings.TrimSpace(response))
 			}
 		}
+
+		attemptElapsed := time.Since(attemptStart)
 		if err != nil {
 			if conn != nil {
 				_ = conn.Close()
 			}
-			lastErr = err
-			if d.Health != nil {
+			if d.Health != nil && exists {
 				d.Health.RecordFailure(provider, err)
 			}
+
+			lastErr, lastErrType = err, classifyError(ctx, err, errType)
+			recordAttempt(ctx, network, match.Route, provider, attemptElapsed, lastErrType)
+			slog.Warn("route provider attempt failed",
+				"address", address,
+				"route", match.Route,
+				"provider", provider,
+				"attempt", i+1,
+				"error_type", lastErrType,
+				"error", err,
+				"duration", attemptElapsed,
+			)
 			continue
 		}
+
 		if d.Health != nil {
 			d.Health.RecordSuccess(provider)
 		}
-		log.Printf("Connected to %s via provider %s\n", address, provider)
+
+		elapsed := time.Since(start)
+		recordAttempt(ctx, network, match.Route, provider, attemptElapsed, "")
+		recordRequest(ctx, network, match.Route, provider, elapsed, "")
+		slog.Info("route connected",
+			"address", address,
+			"route", match.Route,
+			"provider", provider,
+			"attempt", i+1,
+			"duration", elapsed,
+		)
 		return &bufferedConn{Conn: conn, reader: reader}, nil
 	}
 
 	if lastErr == nil {
 		lastErr = fmt.Errorf("no healthy providers available")
 	}
+
+	elapsed := time.Since(start)
+	recordRequest(ctx, network, match.Route, "", elapsed, lastErrType)
+	slog.Error("route failed",
+		"address", address,
+		"route", match.Route,
+		"attempts", len(providers),
+		"error_type", lastErrType,
+		"error", lastErr,
+		"duration", elapsed,
+	)
 	return nil, &net.OpError{Op: "dial", Net: network, Err: lastErr}
 }
 

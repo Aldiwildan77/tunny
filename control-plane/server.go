@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"sort"
 	"strings"
-	"sync/atomic"
 	"time"
 
 	"github.com/Aldiwildan77/tunny/health"
+	"github.com/Aldiwildan77/tunny/observability"
 	"github.com/Aldiwildan77/tunny/route"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
@@ -21,13 +21,12 @@ import (
 type Server struct {
 	UnimplementedControlPlaneServer
 
-	routes            *route.Table
-	health            *health.Manager
-	mode              string
-	nodeName          string
-	transport         string
-	startedAt         time.Time
-	activeConnections atomic.Int64
+	routes    *route.Table
+	health    *health.Manager
+	mode      string
+	nodeName  string
+	transport string
+	startedAt time.Time
 }
 
 func NewServer(routes *route.Table, mode, nodeName, transport string, healthManagers ...*health.Manager) (*Server, error) {
@@ -89,7 +88,7 @@ func (s *Server) Serve(ctx context.Context, grpcAddress, httpAddress string) err
 		return err
 	}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(unaryMetrics))
 	RegisterControlPlaneServer(grpcServer, s)
 
 	gateway, err := s.gateway()
@@ -99,7 +98,7 @@ func (s *Server) Serve(ctx context.Context, grpcAddress, httpAddress string) err
 		return err
 	}
 
-	httpServer := &http.Server{Handler: gateway}
+	httpServer := &http.Server{Handler: httpMetrics(gateway)}
 	serveErr := make(chan error, 2)
 
 	go func() {
@@ -143,7 +142,7 @@ func (s *Server) GetStatus(context.Context, *GetStatusRequest) (*Status, error) 
 		NodeName:          s.nodeName,
 		Transport:         s.transport,
 		UptimeSeconds:     int64(time.Since(s.startedAt).Seconds()),
-		ActiveConnections: s.activeConnections.Load(),
+		ActiveConnections: observability.ActiveConnections(),
 	}, nil
 }
 

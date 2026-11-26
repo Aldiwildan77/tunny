@@ -44,4 +44,4 @@ The gRPC service exposes the same five operations. Use [control.proto](../contro
 
 `SetRoute` trims and lowercases the hostname and requires non-empty hostname and provider values. It does not verify that the provider exists in the static `providers` map. `DeleteRoute` accepts any non-empty hostname and returns success even when no mapping existed. Provider addresses and listener settings cannot be changed through this API.
 
-The reported active connection count is currently zero because the command paths do not update the control-plane counter.
+The reported active connection count is the number of client connections currently open across all ingresses of the process (SOCKS5, HTTP proxy, TUN flows, and provider tunnels). It is the same value exported as `tunny.connection.active`.

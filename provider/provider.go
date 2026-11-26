@@ -9,8 +9,10 @@ import (
 	"net"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	"github.com/Aldiwildan77/tunny/node"
+	"github.com/Aldiwildan77/tunny/observability"
 )
 
 var activeHandlers atomic.Int64
@@ -37,6 +39,7 @@ func (p *provider) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	ln = observability.TrackListener(ln, observability.IngressProvider)
 	defer ln.Close()
 
 	log.Println("Server is running on", p.ListenAddress)
@@ -93,6 +96,7 @@ func (p *provider) handle(ctx context.Context, conn net.Conn) {
 	log.Printf("parsed request: %q\n", request)
 
 	if request == "PING" {
+		recordRequest(ctx, requestPing)
 		_, _ = conn.Write([]byte("PONG\n"))
 		return
 	}
@@ -100,6 +104,7 @@ func (p *provider) handle(ctx context.Context, conn net.Conn) {
 	const prefix = "CONNECT "
 
 	if !strings.HasPrefix(request, prefix) {
+		recordRequest(ctx, requestInvalid)
 		log.Printf("invalid request: %q\n", request)
 		_, _ = conn.Write([]byte("ERR invalid request\n"))
 		return
@@ -109,14 +114,18 @@ func (p *provider) handle(ctx context.Context, conn net.Conn) {
 	log.Printf("destination: %q\n", dst)
 
 	if dst == "" {
+		recordRequest(ctx, requestInvalid)
 		_, _ = conn.Write([]byte("ERR missing destination\n"))
 		return
 	}
 
+	recordRequest(ctx, requestConnect)
 	log.Printf("Connecting to %s...", dst)
 
+	dialStart := time.Now()
 	target, err := net.Dial("tcp", dst)
 	if err != nil {
+		recordTargetDial(ctx, time.Since(dialStart), observability.DialErrorType(ctx, err))
 		log.Printf("dial target error: %v", err)
 
 		_, _ = conn.Write(
@@ -126,6 +135,7 @@ func (p *provider) handle(ctx context.Context, conn net.Conn) {
 		return
 	}
 
+	recordTargetDial(ctx, time.Since(dialStart), "")
 	log.Printf("Connected to %s\n", dst)
 
 	defer target.Close()

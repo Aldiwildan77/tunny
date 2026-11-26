@@ -13,10 +13,11 @@ import (
 )
 
 type Config struct {
-	Node      NodeConfig      `yaml:"node"`
-	Tailscale TailscaleConfig `yaml:"tailscale"`
-	Limiter   LimiterConfig   `yaml:"limiter"`
-	Control   ControlConfig   `yaml:"control_plane"`
+	Node          NodeConfig          `yaml:"node"`
+	Tailscale     TailscaleConfig     `yaml:"tailscale"`
+	Limiter       LimiterConfig       `yaml:"limiter"`
+	Control       ControlConfig       `yaml:"control_plane"`
+	Observability ObservabilityConfig `yaml:"observability"`
 
 	// Requestor and Provider
 	Proxy    ProxyConfig    `yaml:"proxy"`
@@ -79,6 +80,13 @@ type ControlConfig struct {
 	HTTPListen string `yaml:"http_listen" default:"127.0.0.1:7072"`
 }
 
+// An empty Endpoint lets the OTLP exporter fall back to OTEL_EXPORTER_OTLP_* env vars.
+type ObservabilityConfig struct {
+	Enabled  bool   `yaml:"enabled"`
+	Endpoint string `yaml:"endpoint"`
+	Insecure bool   `yaml:"insecure"`
+}
+
 func Load(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -89,12 +97,15 @@ func Load(path string) (*Config, error) {
 
 	var cfg Config
 
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("parse config: %w", err)
-	}
-
+	// Defaults go first so YAML can override them. creasty/defaults only fills
+	// zero values, so applying it afterwards would turn an explicit
+	// `enabled: false` back into a `default:"true"`.
 	if err := defaults.Set(&cfg); err != nil {
 		return nil, fmt.Errorf("set default config: %w", err)
+	}
+
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return nil, fmt.Errorf("parse config: %w", err)
 	}
 
 	if err := validator.New().Struct(&cfg); err != nil {

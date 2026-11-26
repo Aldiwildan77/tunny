@@ -25,6 +25,7 @@ This documentation is also synchronized to the [GitHub Wiki](https://github.com/
 - [Proxy mode](proxy.html)
 - [Serve mode](serve.html)
 - [Control plane](control-plane.html)
+- [Observability](observability.html)
 - [Multi-node operation](multi-node.html)
 - [Examples](examples/single-provider.html)
 - [Development](development.html)

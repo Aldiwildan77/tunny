@@ -72,6 +72,8 @@ func New(n node.Node, providers map[string]string, cfg Config) *Manager {
 }
 
 func (m *Manager) Start(ctx context.Context) {
+	m.registerMetrics(ctx)
+
 	if !m.config.Enabled {
 		return
 	}
@@ -94,7 +96,9 @@ func (m *Manager) Start(ctx context.Context) {
 func (m *Manager) checkAll(ctx context.Context) {
 	for name := range m.providers {
 		checkCtx, cancel := context.WithTimeout(ctx, m.config.Timeout)
-		err := m.check(checkCtx, name)
+		start := time.Now()
+		errType, err := m.check(checkCtx, name)
+		recordCheck(ctx, name, time.Since(start), classifyCheckError(checkCtx, errType, err))
 		cancel()
 		if err != nil {
 			m.RecordFailure(name, err)
@@ -104,30 +108,30 @@ func (m *Manager) checkAll(ctx context.Context) {
 	}
 }
 
-func (m *Manager) check(ctx context.Context, name string) error {
+func (m *Manager) check(ctx context.Context, name string) (string, error) {
 	address, ok := m.providers[name]
 	if !ok {
-		return fmt.Errorf("provider not found: %s", name)
+		return errProviderNotFound, fmt.Errorf("provider not found: %s", name)
 	}
 
 	conn, err := m.node.Dial(ctx, "tcp", address)
 	if err != nil {
-		return err
+		return errUnreachable, err
 	}
 	defer conn.Close()
 
 	if _, err := conn.Write([]byte("PING\n")); err != nil {
-		return err
+		return errHandshake, err
 	}
 
 	response, err := bufio.NewReader(conn).ReadString('\n')
 	if err != nil {
-		return err
+		return errHandshake, err
 	}
 	if strings.TrimSpace(response) != "PONG" {
-		return fmt.Errorf("unexpected health response: %q", strings.TrimSpace(response))
+		return errUnexpectedResponse, fmt.Errorf("unexpected health response: %q", strings.TrimSpace(response))
 	}
-	return nil
+	return "", nil
 }
 
 func (m *Manager) RecordFailure(name string, err error) {
@@ -145,6 +149,7 @@ func (m *Manager) RecordFailure(name string, err error) {
 	if status.State != StateUnhealthy && status.ConsecutiveFailures >= m.config.FailureThreshold {
 		status.State = StateUnhealthy
 		status.LastTransition = status.LastCheck
+		recordTransition(name, StateUnhealthy)
 	}
 }
 
@@ -163,6 +168,7 @@ func (m *Manager) RecordSuccess(name string) {
 	if status.State == StateUnhealthy && status.ConsecutiveSuccesses >= m.config.RecoveryThreshold {
 		status.State = StateHealthy
 		status.LastTransition = status.LastCheck
+		recordTransition(name, StateHealthy)
 	}
 }
 

@@ -8,6 +8,7 @@ import (
 	"net"
 	"sync"
 
+	"github.com/Aldiwildan77/tunny/observability"
 	"github.com/Aldiwildan77/tunny/route"
 	"gvisor.dev/gvisor/pkg/buffer"
 	"gvisor.dev/gvisor/pkg/tcpip"
@@ -146,6 +147,7 @@ func (t *Tunnel) setupStack(ctx context.Context) error {
 
 			endpoint, tcpErr := req.CreateEndpoint(&wq)
 			if tcpErr != nil {
+				recordForwardError(ctx, "tcp", errCreateEndpoint)
 				log.Printf("create TCP endpoint failed: %v", tcpErr)
 				req.Complete(true)
 				return
@@ -199,6 +201,7 @@ func (t *Tunnel) readDevice(ctx context.Context) error {
 			continue
 		}
 
+		recordPacket(ctx, observability.DirectionReceive, n, nil)
 		packet := append([]byte(nil), buf[:n]...)
 
 		log.Printf(
@@ -261,6 +264,7 @@ func (t *Tunnel) writeDevice(ctx context.Context) error {
 		)
 
 		_, err := t.device.Write(packet)
+		recordPacket(ctx, observability.DirectionTransmit, len(packet), err)
 		if err != nil {
 			log.Printf(
 				"gVisor -> TUN write failed: bytes=%d first_byte=0x%02x err=%v",
@@ -294,7 +298,7 @@ func (t *Tunnel) handleTCPForward(
 
 	defer endpoint.Close()
 
-	inbound := gonet.NewTCPConn(wq, endpoint)
+	inbound := observability.TrackConn(gonet.NewTCPConn(wq, endpoint), observability.IngressTUN, "tcp")
 	defer inbound.Close()
 
 	dstIP := id.LocalAddress.String()
@@ -319,6 +323,7 @@ func (t *Tunnel) handleTCPForward(
 		dst,
 	)
 	if err != nil {
+		recordForwardError(ctx, "tcp", errDial)
 		log.Printf(
 			"outbound dial failed: %s: %v",
 			dst,
@@ -415,6 +420,7 @@ func (t *Tunnel) handleUDPForward(
 
 	endpoint, udpErr := req.CreateEndpoint(&wq)
 	if udpErr != nil {
+		recordForwardError(ctx, "udp", errCreateEndpoint)
 		log.Printf(
 			"create UDP endpoint failed: %v",
 			udpErr,
@@ -424,7 +430,7 @@ func (t *Tunnel) handleUDPForward(
 	}
 	defer endpoint.Close()
 
-	inbound := gonet.NewUDPConn(&wq, endpoint)
+	inbound := observability.TrackConn(gonet.NewUDPConn(&wq, endpoint), observability.IngressTUN, "udp")
 	defer inbound.Close()
 
 	dstIP := id.LocalAddress.String()
@@ -449,6 +455,7 @@ func (t *Tunnel) handleUDPForward(
 		dst,
 	)
 	if err != nil {
+		recordForwardError(ctx, "udp", errDial)
 		log.Printf(
 			"outbound dial failed: %s: %v",
 			dst,
