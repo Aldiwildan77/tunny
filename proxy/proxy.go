@@ -7,6 +7,7 @@ import (
 
 	"github.com/Aldiwildan77/tunny/health"
 	"github.com/Aldiwildan77/tunny/node"
+	"github.com/Aldiwildan77/tunny/observability"
 	"github.com/Aldiwildan77/tunny/route"
 	"github.com/armon/go-socks5"
 )
@@ -58,6 +59,7 @@ func (p *proxy) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	listener = observability.TrackListener(listener, observability.IngressSOCKS5)
 	defer listener.Close()
 
 	log.Printf("SOCKS5 proxy listening on %s\n", p.Listen)

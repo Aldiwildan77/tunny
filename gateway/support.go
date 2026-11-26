@@ -34,14 +34,14 @@ func copyBidirectional(left, right net.Conn) {
 	result := make(chan struct{}, 2)
 	go func() {
 		_, _ = io.Copy(left, right)
-		if tcp, ok := left.(*net.TCPConn); ok {
+		if tcp, ok := left.(interface{ CloseWrite() error }); ok {
 			_ = tcp.CloseWrite()
 		}
 		result <- struct{}{}
 	}()
 	go func() {
 		_, _ = io.Copy(right, left)
-		if tcp, ok := right.(*net.TCPConn); ok {
+		if tcp, ok := right.(interface{ CloseWrite() error }); ok {
 			_ = tcp.CloseWrite()
 		}
 		result <- struct{}{}

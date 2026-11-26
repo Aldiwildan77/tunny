@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -11,6 +12,7 @@ import (
 	"github.com/Aldiwildan77/tunny/config"
 	"github.com/Aldiwildan77/tunny/gateway"
 	"github.com/Aldiwildan77/tunny/node"
+	"github.com/Aldiwildan77/tunny/observability"
 	"github.com/Aldiwildan77/tunny/proxy"
 	"github.com/Aldiwildan77/tunny/route"
 	"github.com/Aldiwildan77/tunny/tunnel"
@@ -20,6 +22,8 @@ var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Serve configured network ingress modes",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		var obs *observability.Provider
+
 		cfg, err := config.Load(configPath)
 		if err != nil {
 			return err
@@ -36,6 +40,25 @@ var serveCmd = &cobra.Command{
 
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		defer stop()
+
+		if cfg.Observability.Enabled {
+			obs, err = observability.New(ctx, observability.Config{
+				Daemon:     ModeServe.String(),
+				Version:    version,
+				InstanceID: cfg.Node.Name,
+				Endpoint:   cfg.Observability.Endpoint,
+				Insecure:   cfg.Observability.Insecure,
+			})
+			if err != nil {
+				return err
+			}
+
+			defer func() {
+				if err := obs.Shutdown(context.Background()); err != nil {
+					log.Printf("observability shutdown: %v", err)
+				}
+			}()
+		}
 
 		n, err := node.New(cfg.Node, cfg.Tailscale)
 		if err != nil {
